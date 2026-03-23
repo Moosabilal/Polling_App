@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGO_URI || 'mongodb+srv://moosabilal75608:moosabilal@cluster0.1xluc.mongodb.net/pollingApp?retryWrites=true&w=majority&appName=Cluster0';
-
 export class Database {
     public static async connect(): Promise<void> {
         try {
