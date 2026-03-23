@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Poll - SpaceVote</title>
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <div class="background-animation">
+        <div class="shape shape1"></div>
+        <div class="shape shape2"></div>
+        <div class="shape shape3"></div>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <header class="dashboard-header glass-panel">
+            <div class="logo">
+                <span class="logo-icon">✨</span> SpaceVote
+            </div>
+            <div class="user-info">
+                <span id="current-username">Guest</span>
+                <button id="back-btn" class="btn outline-btn">Back to Dashboard</button>
+            </div>
+        </header>
+
+        <main style="max-width: 600px; margin: 40px auto; width: 100%;">
+            <section class="glass-panel" style="padding: 30px;">
+                <div class="section-header" style="border-bottom: none; margin-bottom: 20px; padding: 0;">
+                    <h2>📝 Create New Poll</h2>
+                </div>
+
+                <div id="create-poll-container" class="create-poll-container"
+                    style="background: transparent; border: none; padding: 0; animation: none;">
+                    <input type="text" id="new-poll-question" placeholder="Ask a question..." class="poll-input"
+                        style="font-size: 1.1rem; padding: 15px;">
+                    <div id="new-poll-options" class="new-poll-options" style="margin-top: 15px;">
+                        <input type="text" class="poll-input option-input" placeholder="Option 1">
+                        <input type="text" class="poll-input option-input" placeholder="Option 2">
+                    </div>
+                    <div class="create-poll-actions" style="margin-top: 25px;">
+                        <button id="add-option-btn" class="text-btn">+ Add Option</button>
+                        <div class="action-buttons">
+                            <button id="submit-poll-btn" class="btn primary-btn"
+                                style="padding: 10px 30px; font-size: 1rem;">Launch Poll</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="./js/create-poll.js"></script>
+</body>
+
+</html>
