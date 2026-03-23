@@ -2,6 +2,7 @@ export interface User {
     id: string;
     name: string;
     email: string;
+    avatarUrl?: string;
 }
 
 export interface PollOption {
@@ -23,5 +24,6 @@ export interface ChatMessage {
     userId: string;
     name: string;
     text: string;
+    avatarUrl?: string;
     timestamp: Date;
 }
