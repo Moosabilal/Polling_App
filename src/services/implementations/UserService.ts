@@ -23,7 +23,7 @@ export class UserService implements IUserService {
         const isMatch = await userDoc.comparePassword(password);
         if (!isMatch) return null;
 
-        return { id: userDoc._id.toString(), name: userDoc.name, email: userDoc.email };
+        return { id: userDoc._id.toString(), name: userDoc.name, email: userDoc.email, avatarUrl: userDoc.avatarUrl };
     }
 
     async getUserById(id: string): Promise<User | null> {
@@ -36,5 +36,10 @@ export class UserService implements IUserService {
 
     async removeUser(id: string): Promise<void> {
         await this.userRepository.removeUser(id);
+    }
+
+    async updateProfile(id: string, name: string, avatarUrl?: string): Promise<User | null> {
+        if (!name || name.trim() === '') throw new Error('Name cannot be empty');
+        return this.userRepository.updateProfile(id, name.trim(), avatarUrl);
     }
 }

@@ -108,10 +108,54 @@ export class SocketHandler {
             socket.on('sendMessage', async ({ userId, name, text }) => {
                 console.log(`sendMessage received: userId=${userId}, name=${name}, text=${text}`);
                 try {
-                    const message = await this.chatService.addMessage(userId, name, text);
+                    const userObj = await this.userService.getUserById(userId);
+                    const avatarUrl = userObj?.avatarUrl;
+                    const message = await this.chatService.addMessage(userId, name, text, avatarUrl);
                     this.io.emit('newMessage', message);
                 } catch (error: any) {
                     console.error('sendMessage error:', error);
+                    socket.emit('error', { message: error.message });
+                }
+            });
+
+            socket.on('editMessage', async ({ msgId, userId: clientUserId, newText }) => {
+                try {
+                    let userId = clientUserId;
+                    const cookies = cookie.parse(socket.handshake.headers.cookie || '');
+                    if (cookies.token) {
+                        try {
+                            const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET || 'supersecretkey') as { id: string };
+                            userId = decoded.id;
+                        } catch (e: any) { }
+                    }
+                    if (!userId) throw new Error('Unauthorized');
+
+                    const updatedMessage = await this.chatService.updateMessage(msgId, userId, newText);
+                    if (updatedMessage) {
+                        this.io.emit('messageEdited', updatedMessage);
+                    }
+                } catch (error: any) {
+                    socket.emit('error', { message: error.message });
+                }
+            });
+
+            socket.on('deleteMessage', async ({ msgId, userId: clientUserId }) => {
+                try {
+                    let userId = clientUserId;
+                    const cookies = cookie.parse(socket.handshake.headers.cookie || '');
+                    if (cookies.token) {
+                        try {
+                            const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET || 'supersecretkey') as { id: string };
+                            userId = decoded.id;
+                        } catch (e: any) { }
+                    }
+                    if (!userId) throw new Error('Unauthorized');
+
+                    const success = await this.chatService.deleteMessage(msgId, userId);
+                    if (success) {
+                        this.io.emit('messageDeleted', { msgId });
+                    }
+                } catch (error: any) {
                     socket.emit('error', { message: error.message });
                 }
             });

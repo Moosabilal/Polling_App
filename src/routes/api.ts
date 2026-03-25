@@ -17,6 +17,7 @@ export const setupApiRoutes = (container: Container): Router => {
     router.post('/auth/login', authController.login);
     router.post('/auth/logout', authController.logout);
     router.get('/auth/me', authMiddleware as any, authController.me as any);
+    router.put('/auth/profile', authMiddleware as any, authController.profile as any);
 
     // Poll Routes
     router.get('/polls', pollController.getPolls);
