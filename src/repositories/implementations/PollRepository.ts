@@ -3,24 +3,20 @@ import { IPollRepository } from '../interfaces/IPollRepository';
 import { Poll } from '../../types';
 import { PollModel } from '../../models/Poll';
 import { v4 as uuidv4 } from 'uuid';
+import { PollMapper } from '../../mappers/PollMapper';
 
 @injectable()
 export class PollRepository implements IPollRepository {
     async getPoll(id: string): Promise<Poll | null> {
         const poll = await PollModel.findById(id);
         if (!poll) return null;
-        return this.mapToType(poll);
+        return PollMapper.toDomain(poll);
     }
 
     async getAllPolls(): Promise<Poll[]> {
-        // Initialize default poll if no polls exist
-        const count = await PollModel.countDocuments();
-        if (count === 0) {
-            await this.createPoll('What is your favorite programming language?', ['JavaScript', 'Python', 'Java', 'C#']);
-        }
 
         const polls = await PollModel.find();
-        return polls.map(p => this.mapToType(p));
+        return polls.map(p => PollMapper.toDomain(p));
     }
 
     async addVote(pollId: string, optionId: string, userId: string): Promise<Poll | null> {
@@ -65,7 +61,7 @@ export class PollRepository implements IPollRepository {
         }
 
         await poll.save();
-        return this.mapToType(poll);
+        return PollMapper.toDomain(poll);
     }
 
     async createPoll(question: string, optionTexts: string[]): Promise<Poll> {
@@ -77,23 +73,31 @@ export class PollRepository implements IPollRepository {
 
         const newPoll = new PollModel({ question, options });
         await newPoll.save();
-        return this.mapToType(newPoll);
+        return PollMapper.toDomain(newPoll);
     }
 
-    private mapToType(pollDoc: any): Poll {
-        return {
-            id: pollDoc._id.toString(),
-            question: pollDoc.question,
-            options: pollDoc.options.map((opt: any) => ({
-                id: opt.id,
-                text: opt.text,
-                votes: opt.votes
-            })),
-            votedUserIds: pollDoc.voters.map((v: any) => v.userId ? v.userId.toString() : v.toString()),
-            userVotes: pollDoc.voters.map((v: any) => ({
-                userId: v.userId ? v.userId.toString() : v.toString(),
-                optionId: v.optionId
-            }))
-        };
+    async updatePoll(pollId: string, question: string, optionTexts: string[]): Promise<Poll | null> {
+        const poll = await PollModel.findById(pollId);
+        if (!poll) return null;
+
+        poll.question = question;
+        // Rebuild options preserving IDs where possible for voters continuity
+        const newOptions = optionTexts.map((text, i) => ({
+            id: (poll.options[i] as any)?.id || uuidv4(),
+            text,
+            votes: 0
+        }));
+        poll.options = newOptions as any;
+        // Reset all votes since options may have changed
+        poll.voters = [] as any;
+
+        await poll.save();
+        return PollMapper.toDomain(poll);
+    }
+
+    async deletePoll(pollId: string): Promise<boolean> {
+        const result = await PollModel.findByIdAndDelete(pollId);
+        return result !== null;
     }
 }
+

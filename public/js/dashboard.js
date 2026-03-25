@@ -28,21 +28,82 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             localStorage.removeItem('user');
-            window.location.href = './index.html';
+            window.location.replace('./index.html');
         }
     };
     checkAuth();
 
+    // Custom Popup Logic
+    window.showCustomPopup = (title, message, isConfirm = false, icon = '⚠️') => {
+        return new Promise((resolve) => {
+            const popupModal = document.getElementById('custom-popup-modal');
+            document.getElementById('custom-popup-title').textContent = title;
+            document.getElementById('custom-popup-message').textContent = message;
+            document.getElementById('popup-icon').textContent = icon;
+
+            const cancelBtn = document.getElementById('custom-popup-cancel');
+            const confirmBtn = document.getElementById('custom-popup-confirm');
+
+            cancelBtn.style.display = isConfirm ? 'block' : 'none';
+            popupModal.classList.remove('hidden');
+
+            const handleConfirm = () => {
+                cleanup();
+                resolve(true);
+            };
+            const handleCancel = () => {
+                cleanup();
+                resolve(false);
+            };
+            const cleanup = () => {
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+                popupModal.classList.add('hidden');
+            };
+
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+        });
+    };
+
     // Logout
     document.getElementById('logout-btn').addEventListener('click', async () => {
+        const confirmed = await window.showCustomPopup('Logout', 'Are you sure you want to disconnect from SpaceVote?', true, '🚪');
+        if (!confirmed) return;
+
         try {
             await fetch('./api/auth/logout', { method: 'POST' });
         } catch (err) {
             console.error('Logout failed:', err);
         }
         localStorage.removeItem('user');
-        window.location.href = './index.html';
+        window.location.replace('./index.html');
     });
+
+    // Global helper: download a cross-origin file via fetch → Blob → temporary <a> click
+    // This bypasses the browser restriction where the HTML `download` attribute is ignored
+    // for cross-origin URLs (Cloudinary is cross-origin).
+    window.downloadChatFile = async (url, fileName) => {
+        try {
+            // Use our backend proxy to avoid CORS issues on raw/pdf Cloudinary resources
+            const proxyUrl = `./api/proxy-download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(fileName)}`;
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        } catch (err) {
+            console.error('Download failed:', err);
+            // Fallback: open in new tab
+            window.open(url, '_blank');
+        }
+    };
 
     // Socket Connection
     const socket = io();
@@ -59,6 +120,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Poll Selection & Creation Elements
     const pollPaginationBox = document.getElementById('poll-pagination');
     const navCreatePollBtn = document.getElementById('nav-create-poll-btn');
+    const editPollBtn = document.getElementById('edit-poll-btn');
+    const deletePollBtn = document.getElementById('delete-poll-btn');
+
+    // Edit Poll Modal Elements
+    const editPollModal = document.getElementById('edit-poll-modal');
+    const closeEditPollBtn = document.getElementById('close-edit-poll-btn');
+    const editPollQuestionInput = document.getElementById('edit-poll-question');
+    const editPollOptionsContainer = document.getElementById('edit-poll-options');
+    const editAddOptionBtn = document.getElementById('edit-add-option-btn');
+    const saveEditPollBtn = document.getElementById('save-edit-poll-btn');
 
     // Modal Elements
     const createPollModal = document.getElementById('create-poll-modal');
@@ -88,6 +159,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const typingIndicator = document.getElementById('typing-indicator');
+    const chatFileInput = document.getElementById('chat-file-input');
+    const chatAttachBtn = document.getElementById('chat-attach-btn');
+    const chatFilePreview = document.getElementById('chat-file-preview');
+    const chatFilePreviewName = document.getElementById('chat-file-preview-name');
+    const chatFileRemoveBtn = document.getElementById('chat-file-remove-btn');
+
+    let pendingFile = null; // { fileUrl, fileName, fileType }
 
     // Helper Functions
     const toastContainer = document.getElementById('toast-container');
@@ -232,7 +310,21 @@ document.addEventListener('DOMContentLoaded', () => {
         ${!isSelf ? `<span class="sender-name">${msg.name || msg.username || 'Anonymous'}</span><span style="opacity: 0.5;">•</span>` : ''}
         <span class="timestamp">${timeString}</span>
       </div>
-      <div class="message-bubble">${msg.text}
+      <div class="message-bubble">${msg.text ? msg.text : ''}
+        ${msg.fileUrl && msg.fileType && msg.fileType.startsWith('image/') ? `
+          <div style="margin-top:${msg.text ? '8px' : '0'};">
+            <img src="${msg.fileUrl}" alt="${msg.fileName || 'image'}" style="max-width:220px; max-height:220px; border-radius:10px; display:block; cursor:pointer;" onclick="window.open('${msg.fileUrl}','_blank')">
+          </div>
+        ` : msg.fileUrl ? `
+          <div style="margin-top:${msg.text ? '8px' : '0'}; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.07); border-radius:10px; padding:10px 14px; border:1px solid rgba(255,255,255,0.12);">
+            <span style="font-size:1.4rem;">📄</span>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${msg.fileName || 'File'}</div>
+              <div style="font-size:0.75rem; color:#94a3b8;">${msg.fileType || ''}</div>
+            </div>
+            <button onclick="window.downloadChatFile('${msg.fileUrl}','${(msg.fileName || 'file').replace(/'/g, '&apos;')}')" style="background:none; border:1px solid rgba(99,102,241,0.5); border-radius:6px; color:var(--secondary); font-size:0.8rem; padding:4px 10px; cursor:pointer; white-space:nowrap;">⬇ Download</button>
+          </div>
+        ` : ''}
         ${controlsHTML}
       </div>
     `;
@@ -297,10 +389,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (deleteBtn) {
-                deleteBtn.addEventListener('click', (e) => {
+                deleteBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     dropdown.classList.remove('show');
-                    if (confirm('Are you sure you want to permanently delete this message?')) {
+                    const confirmed = await window.showCustomPopup('Delete Message', 'Are you sure you want to permanently delete this message?', true, '🗑️');
+                    if (confirmed) {
                         socket.emit('deleteMessage', { msgId: msg.id, userId: userIdStr });
                     }
                 });
@@ -329,6 +422,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const newestPoll = data.polls[data.polls.length - 1];
             renderPoll(newestPoll);
             highlightActivePagination(newestPoll.id);
+        } else {
+            pollQuestion.innerHTML = '<span style="color: #94a3b8; font-weight: 500;">Polls not yet created</span>';
+            pollOptionsContainer.innerHTML = '';
+            totalVotesCount.textContent = '0';
+
+            if (user.email === 'admin@gmail.com') {
+                const addBtn = document.createElement('button');
+                addBtn.className = 'btn primary-btn';
+                addBtn.textContent = '+ Create First Poll';
+                addBtn.style.marginTop = '20px';
+                addBtn.addEventListener('click', () => {
+                    createPollModal.classList.remove('hidden');
+                });
+                pollOptionsContainer.appendChild(addBtn);
+            }
         }
 
         if (data.chatHistory) {
@@ -385,6 +493,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    socket.on('pollDeleted', ({ pollId }) => {
+        showToast('A poll was deleted by the admin.');
+        allPolls = allPolls.filter(p => p.id !== pollId);
+        updatePollPagination();
+
+        if (allPolls.length > 0) {
+            const nextPoll = allPolls[allPolls.length - 1];
+            renderPoll(nextPoll);
+            highlightActivePagination(nextPoll.id);
+        } else {
+            currentPoll = null;
+            pollQuestion.innerHTML = '<span style="color: #94a3b8; font-weight: 500;">Polls not yet created</span>';
+            pollOptionsContainer.innerHTML = '';
+            totalVotesCount.textContent = '0';
+            if (user.email === 'admin@gmail.com') {
+                const addBtn = document.createElement('button');
+                addBtn.className = 'btn primary-btn';
+                addBtn.textContent = '+ Create First Poll';
+                addBtn.style.marginTop = '20px';
+                addBtn.addEventListener('click', () => { createPollModal.classList.remove('hidden'); });
+                pollOptionsContainer.appendChild(addBtn);
+            }
+        }
+    });
+
     socket.on('newPollCreated', (newPoll) => {
         showToast(`New poll launched: "${newPoll.question}"`);
         allPolls.push(newPoll);
@@ -415,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('error', (err) => {
-        alert(err.message || 'An error occurred');
+        window.showCustomPopup('Error', err.message || 'An error occurred', false, '⚠️');
     });
 
     // Typing logic
@@ -452,6 +585,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Admin Edit / Delete poll buttons
+    if (user.email === 'admin@gmail.com') {
+        if (editPollBtn) editPollBtn.style.display = 'inline-flex';
+        if (deletePollBtn) deletePollBtn.style.display = 'inline-flex';
+    }
+
+    if (editPollBtn) {
+        editPollBtn.addEventListener('click', () => {
+            if (!currentPoll) return;
+            // Pre-fill the edit modal with the current poll data
+            editPollQuestionInput.value = currentPoll.question;
+            editPollOptionsContainer.innerHTML = '';
+            currentPoll.options.forEach((opt, i) => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'poll-input option-input';
+                input.placeholder = `Option ${i + 1}`;
+                input.value = opt.text;
+                editPollOptionsContainer.appendChild(input);
+            });
+            editPollModal.classList.remove('hidden');
+        });
+    }
+
+    if (closeEditPollBtn) {
+        closeEditPollBtn.addEventListener('click', () => {
+            editPollModal.classList.add('hidden');
+        });
+    }
+
+    if (editAddOptionBtn) {
+        editAddOptionBtn.addEventListener('click', () => {
+            const count = editPollOptionsContainer.children.length + 1;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'poll-input option-input';
+            input.placeholder = `Option ${count}`;
+            editPollOptionsContainer.appendChild(input);
+        });
+    }
+
+    if (saveEditPollBtn) {
+        saveEditPollBtn.addEventListener('click', () => {
+            if (!currentPoll) return;
+            const question = editPollQuestionInput.value.trim();
+            const optionInputs = editPollOptionsContainer.querySelectorAll('.option-input');
+            const options = Array.from(optionInputs)
+                .map(inp => inp.value.trim())
+                .filter(v => v.length > 0);
+
+            if (!question) {
+                window.showCustomPopup('Missing Info', 'Please enter a question', false, '🤔');
+                return;
+            }
+            if (options.length < 2) {
+                window.showCustomPopup('Missing Info', 'Please provide at least 2 options', false, '🤔');
+                return;
+            }
+
+            socket.emit('editPoll', {
+                pollId: currentPoll.id,
+                question,
+                options,
+                userId: user.id || user._id
+            });
+            editPollModal.classList.add('hidden');
+        });
+    }
+
+    if (deletePollBtn) {
+        deletePollBtn.addEventListener('click', async () => {
+            if (!currentPoll) return;
+            const confirmed = await window.showCustomPopup(
+                'Delete Poll',
+                `Are you sure you want to permanently delete "${currentPoll.question}"? All votes will be lost.`,
+                true,
+                '🗑️'
+            );
+            if (!confirmed) return;
+            socket.emit('deletePoll', { pollId: currentPoll.id, userId: user.id || user._id });
+        });
+    }
+
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', () => {
             createPollModal.classList.add('hidden');
@@ -483,11 +699,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 .filter(val => val.length > 0);
 
             if (!question) {
-                alert('Please enter a question');
+                window.showCustomPopup('Missing Info', 'Please enter a question', false, '🤔');
                 return;
             }
             if (options.length < 2) {
-                alert('Please provide at least 2 options');
+                window.showCustomPopup('Missing Info', 'Please provide at least 2 options', false, '🤔');
                 return;
             }
 
@@ -564,11 +780,11 @@ document.addEventListener('DOMContentLoaded', () => {
         saveProfileBtn.addEventListener('click', async () => {
             const newName = profileNameInput.value.trim();
             if (!newName) {
-                alert('Display name cannot be empty');
+                window.showCustomPopup('Error', 'Display name cannot be empty', false, '❌');
                 return;
             }
 
-            let newAvatarUrl = user.avatarUrl;
+            let updatePayload = { name: newName };
 
             if (cropperInstance) {
                 const canvas = cropperInstance.getCroppedCanvas({
@@ -578,14 +794,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     imageSmoothingEnabled: true,
                     imageSmoothingQuality: 'high',
                 });
-                newAvatarUrl = canvas.toDataURL('image/jpeg', 0.8);
+                const base64Data = canvas.toDataURL('image/jpeg', 0.8);
+
+                try {
+                    const uploadRes = await fetch('./api/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            data: base64Data,
+                            fileName: 'avatar.jpg',
+                            fileType: 'image/jpeg',
+                            folder: 'spacevote/avatars'
+                        })
+                    });
+                    const uploadData = await uploadRes.json();
+                    if (!uploadData.success) {
+                        window.showCustomPopup('Error', uploadData.message || 'Failed to upload avatar', false, '❌');
+                        return;
+                    }
+                    updatePayload.avatarPublicId = uploadData.publicId;
+                    updatePayload.avatarResourceType = uploadData.resourceType;
+                } catch (e) {
+                    window.showCustomPopup('Error', 'Network error uploading avatar.', false, '❌');
+                    return;
+                }
             }
 
             try {
                 const response = await fetch('./api/auth/profile', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: newName, avatarUrl: newAvatarUrl || null })
+                    body: JSON.stringify(updatePayload)
                 });
                 const data = await response.json();
                 if (data.success) {
@@ -601,41 +840,203 @@ document.addEventListener('DOMContentLoaded', () => {
                     closeProfileBtn.click();
                     showToast('Profile updated successfully!');
                 } else {
-                    alert(data.message || 'Failed to update profile');
+                    window.showCustomPopup('Error', data.message || 'Failed to update profile', false, '❌');
                 }
             } catch (err) {
                 console.error(err);
-                alert('An error occurred while updating profile');
+                window.showCustomPopup('Error', 'An error occurred while updating profile', false, '❌');
             }
         });
     }
 
+    // File attachment logic
+    if (chatAttachBtn) {
+        chatAttachBtn.addEventListener('click', () => chatFileInput.click());
+    }
+
+    if (chatFileInput) {
+        chatFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const MAX_SIZE = 10 * 1024 * 1024;
+            if (file.size > MAX_SIZE) {
+                window.showCustomPopup('File Too Large', 'Please select a file smaller than 10MB.', false, '⚠️');
+                chatFileInput.value = '';
+                return;
+            }
+
+            // Read as local base64 immediately for instant preview
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                // Create the state object ONCE and keep closure reference to it
+                const fileState = {
+                    localPreviewUrl: ev.target.result,
+                    fileName: file.name,
+                    fileType: file.type,
+                    uploading: true,
+                    publicId: null,
+                    resourceType: null
+                };
+                pendingFile = fileState;  // point pendingFile at the same object
+                chatFilePreviewName.textContent = `⏳ Uploading ${file.name}...`;
+                chatFilePreview.style.display = 'flex';
+
+                // Upload to Cloudinary via backend
+                fetch('./api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: ev.target.result, fileName: file.name, fileType: file.type })
+                })
+                    .then(r => r.json())
+                    .then(result => {
+                        if (result.success) {
+                            fileState.publicId = result.publicId;
+                            fileState.resourceType = result.resourceType;
+                            fileState.uploading = false;
+                            if (pendingFile === fileState) {
+                                chatFilePreviewName.textContent = `📎 ${file.name} (Ready)`;
+                            }
+                        } else {
+                            fileState.uploading = false;
+                            if (pendingFile === fileState) {
+                                window.showCustomPopup('Upload Failed', result.message || 'Could not upload file.', false, '❌');
+                                pendingFile = null;
+                                chatFileInput.value = '';
+                                chatFilePreview.style.display = 'none';
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        fileState.uploading = false;
+                        if (pendingFile === fileState) {
+                            window.showCustomPopup('Upload Error', 'Network error during upload.', false, '❌');
+                            pendingFile = null;
+                            chatFileInput.value = '';
+                            chatFilePreview.style.display = 'none';
+                        }
+                    });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (chatFileRemoveBtn) {
+        chatFileRemoveBtn.addEventListener('click', () => {
+            pendingFile = null;
+            chatFileInput.value = '';
+            chatFilePreview.style.display = 'none';
+            chatFilePreviewName.textContent = '';
+        });
+    }
+
+    // Helper: insert a temporary optimistic message in the chat
+    const insertOptimisticMessage = (text, file) => {
+        const tempId = `optimistic-${Date.now()}`;
+        const tempEl = document.createElement('div');
+        tempEl.className = 'message self';
+        tempEl.dataset.tempId = tempId;
+
+        const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isImage = file && file.fileType && file.fileType.startsWith('image/');
+
+        tempEl.innerHTML = `
+            <div class="message-meta" style="display:flex;align-items:center;gap:8px;">
+                <span class="timestamp">${timeString}</span>
+            </div>
+            <div class="message-bubble" style="position:relative;">
+                ${text ? `<span>${text}</span>` : ''}
+                ${file && file.localPreviewUrl && isImage ? `
+                    <div style="margin-top:${text ? '8px' : '0'}; position:relative; display:inline-block;">
+                        <img src="${file.localPreviewUrl}" alt="${file.fileName}" style="max-width:220px;max-height:220px;border-radius:10px;display:block;opacity:0.7;">
+                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);border-radius:10px;">
+                            <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,0.8);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                        </div>
+                    </div>
+                ` : file && file.localPreviewUrl ? `
+                    <div style="margin-top:${text ? '8px' : '0'};display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);opacity:0.7;">
+                        <div style="width:22px;height:22px;border:2px solid rgba(255,255,255,0.6);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                        <span style="font-size:0.85rem;">${file.fileName}</span>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+        chatMessages.appendChild(tempEl);
+        scrollToBottom();
+        return tempId;
+    };
+
     // Event Listeners
     chatInput.addEventListener('input', () => {
         socket.emit('typing', { name: user.name });
-
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
             socket.emit('stopTyping', { name: user.name });
         }, 2000);
     });
 
-    chatForm.addEventListener('submit', (e) => {
+    chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = chatInput.value.trim();
-        if (!text) return;
+        if (!text && !pendingFile) return;
 
-        const payload = {
-            userId: user.id || user._id,
-            name: user.name,
-            text: text
-        };
-        console.log('Sending message payload:', payload);
+        // Keep a REFERENCE (not a spread copy) so upload callback mutations are visible
+        const fileRef = pendingFile || null;
 
-        socket.emit('sendMessage', payload);
-
-        socket.emit('stopTyping', { name: user.name });
+        // Clear UI immediately
         chatInput.value = '';
         chatInput.focus();
+        pendingFile = null;
+        chatFileInput.value = '';
+        chatFilePreview.style.display = 'none';
+        chatFilePreviewName.textContent = '';
+
+        socket.emit('stopTyping', { name: user.name });
+
+        if (fileRef) {
+            // Show optimistic message immediately with local preview
+            const tempId = insertOptimisticMessage(text, fileRef);
+
+            // Wait for upload to finish if still in progress (max 30s)
+            if (fileRef.uploading) {
+                await new Promise(resolve => {
+                    const poll = setInterval(() => {
+                        // fileRef is the SAME object the upload callback updates
+                        if (!fileRef.uploading) {
+                            clearInterval(poll);
+                            resolve();
+                        }
+                    }, 200);
+                    setTimeout(() => { clearInterval(poll); resolve(); }, 30000);
+                });
+            }
+
+            // Remove optimistic message — server echo inserts the real one
+            const tempEl = chatMessages.querySelector(`[data-temp-id="${tempId}"]`);
+            if (tempEl) tempEl.remove();
+
+            if (!fileRef.publicId && !text) {
+                window.showCustomPopup('Upload Failed', 'The file could not be uploaded in time.', false, '❌');
+                return;
+            }
+
+            socket.emit('sendMessage', {
+                userId: user.id || user._id,
+                name: user.name,
+                text,
+                filePublicId: fileRef.publicId,
+                fileResourceType: fileRef.resourceType,
+                fileName: fileRef.fileName,
+                fileType: fileRef.fileType,
+            });
+        } else {
+            socket.emit('sendMessage', {
+                userId: user.id || user._id,
+                name: user.name,
+                text,
+            });
+        }
     });
 });
+

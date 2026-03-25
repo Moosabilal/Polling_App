@@ -63,8 +63,8 @@ export class AuthController implements IAuthController {
                 res.status(401).json({ success: false, message: 'Not authenticated' });
                 return;
             }
-            const { name, avatarUrl } = req.body;
-            const updatedUser = await this.userService.updateProfile(req.user.id, name, avatarUrl);
+            const { name, avatarPublicId, avatarResourceType } = req.body;
+            const updatedUser = await this.userService.updateProfile(req.user.id, name, avatarPublicId, avatarResourceType);
             if (!updatedUser) {
                 res.status(404).json({ success: false, message: 'User not found' });
                 return;

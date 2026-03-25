@@ -4,7 +4,7 @@ import path from 'path';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://moosa_test:pollingapp123@cluster0.p8v6n.mongodb.net/pollingApp?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/pollingApp';
 
 async function fixIndexes() {
     try {

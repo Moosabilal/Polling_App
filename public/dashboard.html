@@ -51,6 +51,10 @@
                 <div class="section-header">
                     <h2>📊 Live Poll</h2>
                     <div class="poll-header-actions">
+                        <button id="edit-poll-btn" class="btn outline-btn btn-small" title="Edit Poll"
+                            style="display:none;">✏️ Edit</button>
+                        <button id="delete-poll-btn" class="btn outline-btn btn-small" title="Delete Poll"
+                            style="display:none; color:#ef4444; border-color:rgba(239,68,68,0.4);">🗑️ Delete</button>
                         <button id="nav-create-poll-btn" class="btn outline-btn btn-small">+ New</button>
                     </div>
                 </div>
@@ -80,7 +84,20 @@
                     <div id="typing-indicator" class="typing-indicator">
                         <!-- Typing indicators go here -->
                     </div>
+                    <!-- File preview strip (hidden by default) -->
+                    <div id="chat-file-preview"
+                        style="display:none; padding: 8px 20px; background: rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.08); display:none; align-items:center; gap:10px;">
+                        <span id="chat-file-preview-name"
+                            style="font-size:0.85rem; color:#cbd5e1; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                        <button id="chat-file-remove-btn"
+                            style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.1rem; padding:0;">✕</button>
+                    </div>
                     <form id="chat-form" class="chat-input-area">
+                        <!-- Hidden file input -->
+                        <input type="file" id="chat-file-input" accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+                            style="display:none;">
+                        <button type="button" id="chat-attach-btn" class="btn outline-btn" title="Attach file"
+                            style="padding:0; width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.2rem;">📎</button>
                         <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
                         <button type="submit" class="btn primary-btn send-btn">
                             <span class="send-icon">➤</span>
@@ -110,6 +127,29 @@
                     <div class="action-buttons">
                         <button id="submit-poll-btn" class="btn primary-btn" style="padding: 10px 20px;">Launch
                             Poll</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Poll Modal -->
+    <div id="edit-poll-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>✏️ Edit Poll</h2>
+                <button id="close-edit-poll-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="create-poll-container">
+                <input type="text" id="edit-poll-question" placeholder="Poll question..." class="poll-input">
+                <div id="edit-poll-options" class="new-poll-options">
+                    <!-- Options pre-filled by JS -->
+                </div>
+                <div class="create-poll-actions">
+                    <button id="edit-add-option-btn" class="text-btn">+ Add Option</button>
+                    <div class="action-buttons">
+                        <button id="save-edit-poll-btn" class="btn primary-btn" style="padding: 10px 20px;">Save
+                            Changes</button>
                     </div>
                 </div>
             </div>
@@ -156,6 +196,20 @@
 
     <!-- Toast UI Container -->
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- Custom Popup Modal -->
+    <div id="custom-popup-modal" class="modal hidden" style="z-index: 10001;">
+        <div class="modal-content glass-panel" style="max-width: 400px; text-align: center; padding: 40px 30px;">
+            <div id="popup-icon" style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+            <h2 id="custom-popup-title" style="font-size: 1.5rem; margin-bottom: 15px;">Notification</h2>
+            <p id="custom-popup-message"
+                style="color: #cbd5e1; font-size: 1.05rem; margin-bottom: 30px; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="custom-popup-cancel" class="btn outline-btn" style="flex: 1; display: none;">Cancel</button>
+                <button id="custom-popup-confirm" class="btn primary-btn" style="flex: 1;">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script src="./js/dashboard.js"></script>
 </body>
