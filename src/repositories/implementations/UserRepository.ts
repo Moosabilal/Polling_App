@@ -2,26 +2,26 @@ import { injectable } from 'inversify';
 import { IUserRepository } from '../interfaces/IUserRepository';
 import { User } from '../../types';
 import { UserModel } from '../../models/User';
+import { UserMapper } from '../../mappers/UserMapper';
 
 @injectable()
 export class UserRepository implements IUserRepository {
     async register(name: string, email: string, password: string): Promise<User> {
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-        const user = new UserModel({ name, email, password, avatarUrl });
+        const user = new UserModel({ name, email, password });
         await user.save();
-        return { id: user._id.toString(), name: user.name, email: user.email, avatarUrl: user.avatarUrl };
+        return UserMapper.toDomain(user);
     }
 
     async findByEmail(email: string): Promise<User | null> {
         const user = await UserModel.findOne({ email });
         if (!user) return null;
-        return { id: user._id.toString(), name: user.name, email: user.email, avatarUrl: user.avatarUrl };
+        return UserMapper.toDomain(user);
     }
 
     async getUserById(id: string): Promise<User | null> {
         const user = await UserModel.findById(id);
         if (!user) return null;
-        return { id: user._id.toString(), name: user.name, email: user.email, avatarUrl: user.avatarUrl };
+        return UserMapper.toDomain(user);
     }
 
     async removeUser(id: string): Promise<void> {
@@ -30,15 +30,16 @@ export class UserRepository implements IUserRepository {
 
     async getAllUsers(): Promise<User[]> {
         const users = await UserModel.find();
-        return users.map(u => ({ id: u._id.toString(), name: u.name, email: u.email, avatarUrl: u.avatarUrl }));
+        return users.map(u => UserMapper.toDomain(u));
     }
 
-    async updateProfile(id: string, name: string, avatarUrl?: string): Promise<User | null> {
+    async updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null> {
         const updateData: any = { name };
-        if (avatarUrl) updateData.avatarUrl = avatarUrl;
+        if (avatarPublicId) updateData.avatarPublicId = avatarPublicId;
+        if (avatarResourceType) updateData.avatarResourceType = avatarResourceType;
 
         const user = await UserModel.findByIdAndUpdate(id, updateData, { new: true });
         if (!user) return null;
-        return { id: user._id.toString(), name: user.name, email: user.email, avatarUrl: user.avatarUrl };
+        return UserMapper.toDomain(user);
     }
 }

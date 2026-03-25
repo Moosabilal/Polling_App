@@ -2,20 +2,14 @@ import { injectable } from 'inversify';
 import { IChatRepository } from '../interfaces/IChatRepository';
 import { ChatMessage } from '../../types';
 import { ChatMessageModel } from '../../models/ChatMessage';
+import { ChatMapper } from '../../mappers/ChatMapper';
 
 @injectable()
 export class ChatRepository implements IChatRepository {
-    async saveMessage(userId: string, name: string, text: string, avatarUrl?: string): Promise<ChatMessage> {
-        const message = new ChatMessageModel({ userId, name, text, avatarUrl });
+    async saveMessage(userId: string, name: string, text: string, avatarPublicId?: string, filePublicId?: string, fileResourceType?: string, fileName?: string, fileType?: string): Promise<ChatMessage> {
+        const message = new ChatMessageModel({ userId, name, text, avatarPublicId, filePublicId, fileResourceType, fileName, fileType });
         await message.save();
-        return {
-            id: message._id.toString(),
-            userId: message.userId,
-            name: message.name,
-            text: message.text,
-            avatarUrl: message.avatarUrl,
-            timestamp: message.createdAt
-        };
+        return ChatMapper.toDomain(message);
     }
 
     async getRecentMessages(limit: number = 50): Promise<ChatMessage[]> {
@@ -24,14 +18,7 @@ export class ChatRepository implements IChatRepository {
             .limit(limit);
 
         // Reverse so they are in chronological order
-        return messages.reverse().map(msg => ({
-            id: msg._id.toString(),
-            userId: msg.userId,
-            name: msg.name,
-            text: msg.text,
-            avatarUrl: msg.avatarUrl,
-            timestamp: msg.createdAt
-        }));
+        return messages.reverse().map(msg => ChatMapper.toDomain(msg));
     }
 
     async updateMessage(msgId: string, userId: string, newText: string): Promise<ChatMessage | null> {
@@ -47,14 +34,7 @@ export class ChatRepository implements IChatRepository {
         message.text = newText;
         await message.save();
 
-        return {
-            id: message._id.toString(),
-            userId: message.userId,
-            name: message.name,
-            text: message.text,
-            avatarUrl: message.avatarUrl,
-            timestamp: message.createdAt
-        };
+        return ChatMapper.toDomain(message);
     }
 
     async deleteMessage(msgId: string, userId: string): Promise<boolean> {

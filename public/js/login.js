@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // If user is already logged in, redirect to dashboard
     if (localStorage.getItem('user')) {
-        window.location.href = './dashboard.html';
+        window.location.replace('./dashboard.html');
     }
 
     form.addEventListener('submit', async (e) => {
@@ -14,8 +14,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value.trim();
 
-        if (!email || !password) {
-            errorMsg.textContent = 'Please enter both email and password';
+        if (!email) {
+            errorMsg.textContent = 'Email address is required.';
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            errorMsg.textContent = 'Please enter a valid email address.';
+            return;
+        }
+
+        if (!password) {
+            errorMsg.textContent = 'Password is required.';
             return;
         }
 
@@ -36,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Save user detals
                 localStorage.setItem('user', JSON.stringify(data.user));
                 // Redirect
-                window.location.href = './dashboard.html';
+                window.location.replace('./dashboard.html');
             } else {
                 errorMsg.textContent = data.message || 'Login failed. Please try again.';
             }
