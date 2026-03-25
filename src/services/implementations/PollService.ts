@@ -26,4 +26,16 @@ export class PollService implements IPollService {
         }
         return await this.pollRepository.createPoll(question, options);
     }
+
+    async updatePoll(pollId: string, question: string, options: string[]): Promise<Poll | null> {
+        if (!question || options.length < 2) {
+            throw new Error('Poll must have a question and at least 2 options.');
+        }
+        return await this.pollRepository.updatePoll(pollId, question, options);
+    }
+
+    async deletePoll(pollId: string): Promise<boolean> {
+        return await this.pollRepository.deletePoll(pollId);
+    }
 }
+

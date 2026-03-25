@@ -2,6 +2,9 @@ export interface User {
     id: string;
     name: string;
     email: string;
+    avatarUrl?: string;
+    avatarPublicId?: string;
+    avatarResourceType?: string;
 }
 
 export interface PollOption {
@@ -23,5 +26,11 @@ export interface ChatMessage {
     userId: string;
     name: string;
     text: string;
+    avatarUrl?: string;
+    fileUrl?: string;       // generated at read-time from publicId
+    filePublicId?: string;
+    fileResourceType?: string;
+    fileName?: string;
+    fileType?: string;
     timestamp: Date;
 }

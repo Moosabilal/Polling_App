@@ -2,6 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('register-form');
     const errorMsg = document.getElementById('error-message');
 
+    if (localStorage.getItem('user')) {
+        window.location.replace('./dashboard.html');
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorMsg.textContent = '';
@@ -10,6 +14,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value.trim();
         const confirmPassword = document.getElementById('confirm-password').value.trim();
+
+        if (!name) {
+            errorMsg.textContent = 'Full Name is required.';
+            return;
+        }
+
+        if (!email) {
+            errorMsg.textContent = 'Email address is required.';
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            errorMsg.textContent = 'Please enter a valid email address.';
+            return;
+        }
+
+        if (!password) {
+            errorMsg.textContent = 'Password is required.';
+            return;
+        }
+
+        if (password.length < 6) {
+            errorMsg.textContent = 'Password must be at least 6 characters long.';
+            return;
+        }
+
+        if (!confirmPassword) {
+            errorMsg.textContent = 'Please confirm your password.';
+            return;
+        }
 
         if (password !== confirmPassword) {
             errorMsg.textContent = 'Passwords do not match.';
@@ -29,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.success && data.user) {
                 localStorage.setItem('user', JSON.stringify(data.user));
-                window.location.href = './dashboard.html';
+                window.location.replace('./dashboard.html');
             } else {
                 errorMsg.textContent = data.message || 'Registration failed.';
             }

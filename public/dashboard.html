@@ -7,8 +7,11 @@
     <title>Real-Time Polling & Chat - Dashboard</title>
     <link rel="stylesheet" href="./css/dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Load Cropper.js for Avatar Cropping -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
     <!-- Load Socket.IO client from the server -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 
 <body>
@@ -24,8 +27,13 @@
             <div class="logo">
                 <span class="logo-icon">✨</span> SpaceVote
             </div>
-            <div class="user-info">
+            <div class="user-info" style="display: flex; align-items: center; gap: 10px;">
+                <img id="header-avatar" src="" alt="Avatar"
+                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: none; border: 2px solid rgba(255,255,255,0.2);">
                 <span id="current-username">Guest</span>
+                <button id="mute-btn" class="btn outline-btn" title="Toggle Notifications"
+                    style="padding: 6px 10px; font-size: 1.1rem;">🔔</button>
+                <button id="profile-btn" class="btn outline-btn">Profile</button>
                 <button id="logout-btn" class="btn outline-btn">Logout</button>
             </div>
         </header>
@@ -43,6 +51,10 @@
                 <div class="section-header">
                     <h2>📊 Live Poll</h2>
                     <div class="poll-header-actions">
+                        <button id="edit-poll-btn" class="btn outline-btn btn-small" title="Edit Poll"
+                            style="display:none;">✏️ Edit</button>
+                        <button id="delete-poll-btn" class="btn outline-btn btn-small" title="Delete Poll"
+                            style="display:none; color:#ef4444; border-color:rgba(239,68,68,0.4);">🗑️ Delete</button>
                         <button id="nav-create-poll-btn" class="btn outline-btn btn-small">+ New</button>
                     </div>
                 </div>
@@ -72,7 +84,20 @@
                     <div id="typing-indicator" class="typing-indicator">
                         <!-- Typing indicators go here -->
                     </div>
+                    <!-- File preview strip (hidden by default) -->
+                    <div id="chat-file-preview"
+                        style="display:none; padding: 8px 20px; background: rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.08); display:none; align-items:center; gap:10px;">
+                        <span id="chat-file-preview-name"
+                            style="font-size:0.85rem; color:#cbd5e1; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                        <button id="chat-file-remove-btn"
+                            style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.1rem; padding:0;">✕</button>
+                    </div>
                     <form id="chat-form" class="chat-input-area">
+                        <!-- Hidden file input -->
+                        <input type="file" id="chat-file-input" accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+                            style="display:none;">
+                        <button type="button" id="chat-attach-btn" class="btn outline-btn" title="Attach file"
+                            style="padding:0; width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.2rem;">📎</button>
                         <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
                         <button type="submit" class="btn primary-btn send-btn">
                             <span class="send-icon">➤</span>
@@ -104,6 +129,84 @@
                             Poll</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Poll Modal -->
+    <div id="edit-poll-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>✏️ Edit Poll</h2>
+                <button id="close-edit-poll-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="create-poll-container">
+                <input type="text" id="edit-poll-question" placeholder="Poll question..." class="poll-input">
+                <div id="edit-poll-options" class="new-poll-options">
+                    <!-- Options pre-filled by JS -->
+                </div>
+                <div class="create-poll-actions">
+                    <button id="edit-add-option-btn" class="text-btn">+ Add Option</button>
+                    <div class="action-buttons">
+                        <button id="save-edit-poll-btn" class="btn primary-btn" style="padding: 10px 20px;">Save
+                            Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal hidden">
+        <div class="modal-content glass-panel" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>👤 Edit Profile</h2>
+                <button id="close-profile-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="create-poll-container" style="padding-top: 15px; text-align: center;">
+
+                <!-- Avatar Preview -->
+                <div id="avatar-preview-container" style="margin-bottom: 15px;">
+                    <img id="profile-avatar-preview" src="" alt="Avatar Preview"
+                        style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto; display: none; border: 3px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                </div>
+
+                <!-- Cropper Interface (Hidden by Default) -->
+                <div id="cropper-wrapper" style="display: none; width: 100%; max-height: 250px; margin-bottom: 15px;">
+                    <img id="cropper-image" src="" style="max-width: 100%; display: block;">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+                    <label for="profile-avatar-upload" class="btn outline-btn"
+                        style="cursor: pointer; font-size: 0.85rem; padding: 6px 12px;">Browse Photo</label>
+                    <input type="file" id="profile-avatar-upload" accept="image/*" style="display: none;">
+                </div>
+
+                <input type="text" id="profile-name-input" class="poll-input" placeholder="Display Name">
+
+                <div class="create-poll-actions" style="margin-top: 20px;">
+                    <div class="action-buttons" style="width: 100%;">
+                        <button id="save-profile-btn" class="btn primary-btn"
+                            style="width: 100%; padding: 10px 20px;">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast UI Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Custom Popup Modal -->
+    <div id="custom-popup-modal" class="modal hidden" style="z-index: 10001;">
+        <div class="modal-content glass-panel" style="max-width: 400px; text-align: center; padding: 40px 30px;">
+            <div id="popup-icon" style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+            <h2 id="custom-popup-title" style="font-size: 1.5rem; margin-bottom: 15px;">Notification</h2>
+            <p id="custom-popup-message"
+                style="color: #cbd5e1; font-size: 1.05rem; margin-bottom: 30px; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="custom-popup-cancel" class="btn outline-btn" style="flex: 1; display: none;">Cancel</button>
+                <button id="custom-popup-confirm" class="btn primary-btn" style="flex: 1;">OK</button>
             </div>
         </div>
     </div>

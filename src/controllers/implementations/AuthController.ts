@@ -57,6 +57,24 @@ export class AuthController implements IAuthController {
         res.json({ success: true, message: 'Logged out successfully' });
     }
 
+    profile = async (req: AuthRequest, res: Response): Promise<void> => {
+        try {
+            if (!req.user) {
+                res.status(401).json({ success: false, message: 'Not authenticated' });
+                return;
+            }
+            const { name, avatarPublicId, avatarResourceType } = req.body;
+            const updatedUser = await this.userService.updateProfile(req.user.id, name, avatarPublicId, avatarResourceType);
+            if (!updatedUser) {
+                res.status(404).json({ success: false, message: 'User not found' });
+                return;
+            }
+            res.status(200).json({ success: true, user: updatedUser });
+        } catch (error: any) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    }
+
     private sendTokenResponse(user: any, res: Response) {
         const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
             expiresIn: '24h'

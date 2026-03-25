@@ -4,6 +4,7 @@ import { IUserService } from '../interfaces/IUserService';
 import { IUserRepository } from '../../repositories/interfaces/IUserRepository';
 import { User } from '../../types';
 import { UserModel } from '../../models/User';
+import { UserMapper } from '../../mappers/UserMapper';
 
 @injectable()
 export class UserService implements IUserService {
@@ -23,7 +24,7 @@ export class UserService implements IUserService {
         const isMatch = await userDoc.comparePassword(password);
         if (!isMatch) return null;
 
-        return { id: userDoc._id.toString(), name: userDoc.name, email: userDoc.email };
+        return UserMapper.toDomain(userDoc);
     }
 
     async getUserById(id: string): Promise<User | null> {
@@ -36,5 +37,10 @@ export class UserService implements IUserService {
 
     async removeUser(id: string): Promise<void> {
         await this.userRepository.removeUser(id);
+    }
+
+    async updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null> {
+        if (!name || name.trim() === '') throw new Error('Name cannot be empty');
+        return this.userRepository.updateProfile(id, name.trim(), avatarPublicId, avatarResourceType);
     }
 }

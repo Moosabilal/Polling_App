@@ -104,14 +104,120 @@ export class SocketHandler {
                 }
             });
 
+            // Handle poll editing (admin only)
+            socket.on('editPoll', async ({ pollId, question, options, userId: clientUserId }) => {
+                console.log(`[EDIT_POLL] received from clientUserId=${clientUserId}`);
+                try {
+                    let userId = clientUserId;
+                    const cookies = cookie.parse(socket.handshake.headers.cookie || '');
+                    const token = cookies.token;
+                    if (token) {
+                        try {
+                            const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+                            userId = decoded.id;
+                        } catch (e: any) { }
+                    }
+                    if (!userId) throw new Error('Unauthorized');
+
+                    const userObj = await this.userService.getUserById(userId);
+                    if (!userObj || userObj.email !== 'admin@gmail.com') {
+                        throw new Error('Unauthorized: Only administrators can edit polls.');
+                    }
+
+                    const updatedPoll = await this.pollService.updatePoll(pollId, question, options);
+                    if (updatedPoll) {
+                        console.log(`[EDIT_POLL] Success, emitting pollUpdated`);
+                        this.io.emit('pollUpdated', updatedPoll);
+                    }
+                } catch (error: any) {
+                    console.error('[EDIT_POLL] Error:', error.message);
+                    socket.emit('error', { message: error.message });
+                }
+            });
+
+            // Handle poll deletion (admin only)
+            socket.on('deletePoll', async ({ pollId, userId: clientUserId }) => {
+                console.log(`[DELETE_POLL] received from clientUserId=${clientUserId}`);
+                try {
+                    let userId = clientUserId;
+                    const cookies = cookie.parse(socket.handshake.headers.cookie || '');
+                    const token = cookies.token;
+                    if (token) {
+                        try {
+                            const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+                            userId = decoded.id;
+                        } catch (e: any) { }
+                    }
+                    if (!userId) throw new Error('Unauthorized');
+
+                    const userObj = await this.userService.getUserById(userId);
+                    if (!userObj || userObj.email !== 'admin@gmail.com') {
+                        throw new Error('Unauthorized: Only administrators can delete polls.');
+                    }
+
+                    const success = await this.pollService.deletePoll(pollId);
+                    if (success) {
+                        console.log(`[DELETE_POLL] Success, emitting pollDeleted`);
+                        this.io.emit('pollDeleted', { pollId });
+                    }
+                } catch (error: any) {
+                    console.error('[DELETE_POLL] Error:', error.message);
+                    socket.emit('error', { message: error.message });
+                }
+            });
+
             // Chat messages
-            socket.on('sendMessage', async ({ userId, name, text }) => {
+            socket.on('sendMessage', async ({ userId, name, text, filePublicId, fileResourceType, fileName, fileType }) => {
                 console.log(`sendMessage received: userId=${userId}, name=${name}, text=${text}`);
                 try {
-                    const message = await this.chatService.addMessage(userId, name, text);
+                    const userObj = await this.userService.getUserById(userId);
+                    const avatarPublicId = userObj?.avatarPublicId;
+                    const message = await this.chatService.addMessage(userId, name, text, avatarPublicId, filePublicId, fileResourceType, fileName, fileType);
                     this.io.emit('newMessage', message);
                 } catch (error: any) {
                     console.error('sendMessage error:', error);
+                    socket.emit('error', { message: error.message });
+                }
+            });
+
+            socket.on('editMessage', async ({ msgId, userId: clientUserId, newText }) => {
+                try {
+                    let userId = clientUserId;
+                    const cookies = cookie.parse(socket.handshake.headers.cookie || '');
+                    if (cookies.token) {
+                        try {
+                            const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET || 'supersecretkey') as { id: string };
+                            userId = decoded.id;
+                        } catch (e: any) { }
+                    }
+                    if (!userId) throw new Error('Unauthorized');
+
+                    const updatedMessage = await this.chatService.updateMessage(msgId, userId, newText);
+                    if (updatedMessage) {
+                        this.io.emit('messageEdited', updatedMessage);
+                    }
+                } catch (error: any) {
+                    socket.emit('error', { message: error.message });
+                }
+            });
+
+            socket.on('deleteMessage', async ({ msgId, userId: clientUserId }) => {
+                try {
+                    let userId = clientUserId;
+                    const cookies = cookie.parse(socket.handshake.headers.cookie || '');
+                    if (cookies.token) {
+                        try {
+                            const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET || 'supersecretkey') as { id: string };
+                            userId = decoded.id;
+                        } catch (e: any) { }
+                    }
+                    if (!userId) throw new Error('Unauthorized');
+
+                    const success = await this.chatService.deleteMessage(msgId, userId);
+                    if (success) {
+                        this.io.emit('messageDeleted', { msgId });
+                    }
+                } catch (error: any) {
                     socket.emit('error', { message: error.message });
                 }
             });

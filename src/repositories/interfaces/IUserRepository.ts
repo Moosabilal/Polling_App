@@ -6,4 +6,5 @@ export interface IUserRepository {
     getUserById(id: string): Promise<User | null>;
     removeUser(id: string): Promise<void>;
     getAllUsers(): Promise<User[]>;
+    updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null>;
 }
