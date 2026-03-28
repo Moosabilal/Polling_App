@@ -46,7 +46,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 Database.connect();
 
 // Setup API Routes
-app.use('/api', setupApiRoutes);
+app.use('/api', setupApiRoutes());
 
 // Socket.io
 new SocketHandler(io);
