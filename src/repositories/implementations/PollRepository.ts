@@ -1,9 +1,9 @@
 import { injectable } from 'inversify';
-import { IPollRepository } from '../interfaces/IPollRepository';
-import { Poll } from '../../types';
-import { IPollOption, IPollVoter, PollModel } from '../../models/Poll';
+import { IPollRepository } from '../interfaces/IPollRepository.js';
+import { Poll } from '../../types/index.js';
+import { IPollOption, IPollVoter, PollModel } from '../../models/Poll.js';
 import { v4 as uuidv4 } from 'uuid';
-import { PollMapper } from '../../mappers/PollMapper';
+import { PollMapper } from '../../mappers/PollMapper.js';
 
 @injectable()
 export class PollRepository implements IPollRepository {

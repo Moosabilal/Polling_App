@@ -1,11 +1,11 @@
 import { Server, Socket } from 'socket.io';
 import * as cookie from 'cookie';
-import { verifyToken } from '../utils/jwt';
-import { container } from '../DI/container/inversify.config';
-import { TYPES } from '../DI/types';
-import { IPollService } from '../services/interfaces/IPollService';
-import { IChatService } from '../services/interfaces/IChatService';
-import { IUserService } from '../services/interfaces/IUserService';
+import { verifyToken } from '../utils/jwt.js';
+import { container } from '../DI/container/inversify.config.js';
+import { TYPES } from '../DI/types/index.js';
+import { IPollService } from '../services/interfaces/IPollService.js';
+import { IChatService } from '../services/interfaces/IChatService.js';
+import { IUserService } from '../services/interfaces/IUserService.js';
 
 export class SocketHandler {
     private pollService: IPollService;

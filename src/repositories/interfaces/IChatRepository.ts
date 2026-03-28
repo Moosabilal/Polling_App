@@ -1,4 +1,4 @@
-import { ChatMessage } from '../../types';
+import { ChatMessage } from '../../types/index.js';
 
 export interface IChatRepository {
     saveMessage(userId: string, name: string, text: string, avatarPublicId?: string, filePublicId?: string, fileResourceType?: string, fileName?: string, fileType?: string): Promise<ChatMessage>;

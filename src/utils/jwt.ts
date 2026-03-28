@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
-export const signToken = (payload: object, expiresIn: string | number = '24h'): string => {
+export const signToken = (payload: object, expiresIn: SignOptions['expiresIn'] = '24h'): string => {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: expiresIn });
 };
 

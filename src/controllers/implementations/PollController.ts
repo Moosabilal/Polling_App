@@ -1,17 +1,17 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
-import { TYPES } from '../../DI/types';
-import { IPollController } from '../interfaces/IPollController';
-import { IPollService } from '../../services/interfaces/IPollService';
-import { IUserService } from '../../services/interfaces/IUserService';
+import { TYPES } from '../../DI/types/index.js';
+import { IPollController } from '../interfaces/IPollController.js';
+import { IPollService } from '../../services/interfaces/IPollService.js';
+import { IUserService } from '../../services/interfaces/IUserService.js';
 import { Server as SocketIOServer } from 'socket.io';
 
-export interface IPollControllerExtended extends IPollController {
-    createPoll(req: Request, res: Response): Promise<void>;
-}
+// export interface IPollControllerExtended extends IPollController {
+//     createPoll(req: Request, res: Response): Promise<void>;
+// }
 
 @injectable()
-export class PollController implements IPollControllerExtended {
+export class PollController implements IPollController {
 
     constructor(
         @inject(TYPES.IPollService) private pollService: IPollService,
