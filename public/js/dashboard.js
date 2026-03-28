@@ -1,20 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Check auth
-    const userData = localStorage.getItem('user');
-    let user = JSON.parse(userData || '{}');
-    if (user.name) document.getElementById('current-username').textContent = user.name;
+    let user = {};
     const headerAvatar = document.getElementById('header-avatar');
-    if (user.avatarUrl && headerAvatar) {
-        headerAvatar.src = user.avatarUrl;
-        headerAvatar.style.display = 'inline-block';
-    }
 
     // Verify auth with server
     const checkAuth = async () => {
         try {
             const response = await fetch('./api/auth/me');
             const data = await response.json();
-            console.log('the data', data);
             if (data.success && data.user) {
                 user = data.user;
                 document.getElementById('current-username').textContent = user.name;
@@ -22,15 +14,68 @@ document.addEventListener('DOMContentLoaded', () => {
                     headerAvatar.src = user.avatarUrl;
                     headerAvatar.style.display = 'inline-block';
                 }
-                localStorage.setItem('user', JSON.stringify(user));
+                if (user.email === 'admin@gmail.com') {
+                    initAdminFeatures();
+                }
             } else {
                 throw new Error('Not authenticated');
             }
         } catch (err) {
-            localStorage.removeItem('user');
             window.location.replace('./index.html');
         }
     };
+
+    const initAdminFeatures = () => {
+
+        // 1. Show the Create Poll button
+        if (navCreatePollBtn) {
+            navCreatePollBtn.style.display = 'inline-flex';
+            navCreatePollBtn.addEventListener('click', () => {
+                createPollModal.classList.remove('hidden');
+            });
+        }
+
+        // 2. Show Edit/Delete buttons
+        if (editPollBtn) {
+            editPollBtn.style.display = 'inline-flex';
+            // Move the click listener here so it only attaches if you ARE admin
+            editPollBtn.onclick = () => { // using onclick ensures we don't stack listeners
+                if (!currentPoll) return;
+                editPollQuestionInput.value = currentPoll.question;
+                editPollOptionsContainer.innerHTML = '';
+                currentPoll.options.forEach((opt, i) => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'poll-input option-input';
+                    input.placeholder = `Option ${i + 1}`;
+                    input.value = opt.text;
+                    editPollOptionsContainer.appendChild(input);
+                });
+                editPollModal.classList.remove('hidden');
+            };
+        }
+
+        if (deletePollBtn) {
+            deletePollBtn.style.display = 'inline-flex';
+            deletePollBtn.onclick = async () => {
+                if (!currentPoll) return;
+                const confirmed = await window.showCustomPopup(
+                    'Delete Poll',
+                    `Are you sure you want to permanently delete "${currentPoll.question}"?`,
+                    true,
+                    '🗑️'
+                );
+                if (confirmed) {
+                    try {
+                        const res = await fetch(`/api/polls/${currentPoll.id}`, { method: 'DELETE' });
+                        const result = await res.json();
+                        if (!result.success) showToast(result.message);
+                    } catch (err) { console.error(err); }
+                }
+            };
+        }
+    };
+
     checkAuth();
 
     // Custom Popup Logic
@@ -76,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Logout failed:', err);
         }
-        localStorage.removeItem('user');
         window.location.replace('./index.html');
     });
 
@@ -412,33 +456,43 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
     });
 
+    // Load Initial Poll via REST
+    const loadInitialPoll = async () => {
+        try {
+            const res = await fetch('/api/polls?page=1&limit=1');
+            const data = await res.json();
+            if (data.success && data.totalCount > 0) {
+                allPolls = new Array(data.totalCount).fill(null);
+                const newestPoll = data.polls[0];
+                allPolls[0] = newestPoll;
+                updatePollPagination(data.totalCount, 0);
+                renderPoll(newestPoll);
+            } else {
+                pollQuestion.innerHTML = '<span style="color: #94a3b8; font-weight: 500;">Polls not yet created</span>';
+                pollOptionsContainer.innerHTML = '';
+                totalVotesCount.textContent = '0';
+
+                if (user.email === 'admin@gmail.com') {
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'btn primary-btn';
+                    addBtn.textContent = '+ Create First Poll';
+                    addBtn.style.marginTop = '20px';
+                    addBtn.addEventListener('click', () => {
+                        createPollModal.classList.remove('hidden');
+                    });
+                    pollOptionsContainer.appendChild(addBtn);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load initial poll', err);
+        }
+    };
+
+    // Load immediately
+    loadInitialPoll();
+
     // Socket Events
     socket.on('initialData', (data) => {
-        if (data.polls && data.polls.length > 0) {
-            allPolls = data.polls;
-            updatePollPagination();
-
-            // Select newest poll by default
-            const newestPoll = data.polls[data.polls.length - 1];
-            renderPoll(newestPoll);
-            highlightActivePagination(newestPoll.id);
-        } else {
-            pollQuestion.innerHTML = '<span style="color: #94a3b8; font-weight: 500;">Polls not yet created</span>';
-            pollOptionsContainer.innerHTML = '';
-            totalVotesCount.textContent = '0';
-
-            if (user.email === 'admin@gmail.com') {
-                const addBtn = document.createElement('button');
-                addBtn.className = 'btn primary-btn';
-                addBtn.textContent = '+ Create First Poll';
-                addBtn.style.marginTop = '20px';
-                addBtn.addEventListener('click', () => {
-                    createPollModal.classList.remove('hidden');
-                });
-                pollOptionsContainer.appendChild(addBtn);
-            }
-        }
-
         if (data.chatHistory) {
             chatMessages.innerHTML = '';
             data.chatHistory.forEach(msg => {
@@ -448,30 +502,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const updatePollPagination = () => {
+
+
+    let pendingFetchIndex = null;
+
+    const updatePollPagination = (totalPolls, activeIndex) => {
         pollPaginationBox.innerHTML = '';
-        allPolls.forEach((p, index) => {
+        for (let i = 0; i < totalPolls; i++) {
             const li = document.createElement('li');
             li.className = 'poll-page-item';
-            li.textContent = index + 1;
-            li.dataset.id = p.id;
-            li.title = p.question;
+            li.textContent = i + 1;
+            li.dataset.index = i;
 
             li.addEventListener('click', () => {
-                renderPoll(p);
-                highlightActivePagination(p.id);
+                if (allPolls[i]) {
+                    renderPoll(allPolls[i]);
+                    highlightActivePagination(i);
+                } else {
+                    pendingFetchIndex = i;
+                    // fetch page (1-indexed) iteratively via REST
+                    fetch(`/api/polls?page=${i + 1}&limit=1`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success && data.polls.length > 0) {
+                                const fetchedPoll = data.polls[0];
+                                allPolls[pendingFetchIndex] = fetchedPoll;
+                                renderPoll(fetchedPoll);
+                                highlightActivePagination(pendingFetchIndex);
+                                pendingFetchIndex = null;
+                            }
+                        })
+                        .catch(err => console.error('Error fetching poll page:', err));
+                }
             });
 
             pollPaginationBox.appendChild(li);
-        });
-        if (currentPoll) {
-            highlightActivePagination(currentPoll.id);
         }
+        highlightActivePagination(activeIndex);
     };
 
-    const highlightActivePagination = (id) => {
+    const highlightActivePagination = (index) => {
         Array.from(pollPaginationBox.children).forEach(child => {
-            if (child.dataset.id === id) {
+            if (parseInt(child.dataset.index) === index) {
                 child.classList.add('active');
             } else {
                 child.classList.remove('active');
@@ -482,8 +554,8 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('pollUpdated', (updatedPoll) => {
         showToast('A vote was just cast!');
 
-        // Update it in allPolls array
-        const index = allPolls.findIndex(p => p.id === updatedPoll.id);
+        // Update it in allPolls array if loaded
+        const index = allPolls.findIndex(p => p && p.id === updatedPoll.id);
         if (index !== -1) {
             allPolls[index] = updatedPoll;
         }
@@ -495,13 +567,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.on('pollDeleted', ({ pollId }) => {
         showToast('A poll was deleted by the admin.');
-        allPolls = allPolls.filter(p => p.id !== pollId);
-        updatePollPagination();
+        allPolls = allPolls.filter(p => !p || p.id !== pollId);
+        updatePollPagination(allPolls.length, 0);
 
         if (allPolls.length > 0) {
-            const nextPoll = allPolls[allPolls.length - 1];
-            renderPoll(nextPoll);
-            highlightActivePagination(nextPoll.id);
+            const nextPoll = allPolls[0] || null;
+            if (nextPoll) {
+                renderPoll(nextPoll);
+            } else {
+                socket.emit('fetchPollPage', { page: 1 });
+            }
         } else {
             currentPoll = null;
             pollQuestion.innerHTML = '<span style="color: #94a3b8; font-weight: 500;">Polls not yet created</span>';
@@ -520,10 +595,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.on('newPollCreated', (newPoll) => {
         showToast(`New poll launched: "${newPoll.question}"`);
-        allPolls.push(newPoll);
-        updatePollPagination();
+        allPolls.unshift(newPoll);
+        updatePollPagination(allPolls.length, 0);
         renderPoll(newPoll);
-        highlightActivePagination(newPoll.id);
     });
 
     socket.on('newMessage', (msg) => {
@@ -585,30 +659,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Admin Edit / Delete poll buttons
-    if (user.email === 'admin@gmail.com') {
-        if (editPollBtn) editPollBtn.style.display = 'inline-flex';
-        if (deletePollBtn) deletePollBtn.style.display = 'inline-flex';
-    }
-
-    if (editPollBtn) {
-        editPollBtn.addEventListener('click', () => {
-            if (!currentPoll) return;
-            // Pre-fill the edit modal with the current poll data
-            editPollQuestionInput.value = currentPoll.question;
-            editPollOptionsContainer.innerHTML = '';
-            currentPoll.options.forEach((opt, i) => {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'poll-input option-input';
-                input.placeholder = `Option ${i + 1}`;
-                input.value = opt.text;
-                editPollOptionsContainer.appendChild(input);
-            });
-            editPollModal.classList.remove('hidden');
-        });
-    }
-
     if (closeEditPollBtn) {
         closeEditPollBtn.addEventListener('click', () => {
             editPollModal.classList.add('hidden');
@@ -627,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (saveEditPollBtn) {
-        saveEditPollBtn.addEventListener('click', () => {
+        saveEditPollBtn.addEventListener('click', async () => {
             if (!currentPoll) return;
             const question = editPollQuestionInput.value.trim();
             const optionInputs = editPollOptionsContainer.querySelectorAll('.option-input');
@@ -644,27 +694,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            socket.emit('editPoll', {
-                pollId: currentPoll.id,
-                question,
-                options,
-                userId: user.id || user._id
-            });
-            editPollModal.classList.add('hidden');
-        });
-    }
+            try {
+                const res = await fetch(`/api/polls/${currentPoll.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, options })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.message || 'Failed to update poll');
+                }
+            } catch (err) {
+                console.error('Error updating poll:', err);
+            }
 
-    if (deletePollBtn) {
-        deletePollBtn.addEventListener('click', async () => {
-            if (!currentPoll) return;
-            const confirmed = await window.showCustomPopup(
-                'Delete Poll',
-                `Are you sure you want to permanently delete "${currentPoll.question}"? All votes will be lost.`,
-                true,
-                '🗑️'
-            );
-            if (!confirmed) return;
-            socket.emit('deletePoll', { pollId: currentPoll.id, userId: user.id || user._id });
+            editPollModal.classList.add('hidden');
         });
     }
 
@@ -691,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (submitPollBtn) {
-        submitPollBtn.addEventListener('click', () => {
+        submitPollBtn.addEventListener('click', async () => {
             const question = newPollQuestionInput.value.trim();
             const optionInputs = newPollOptionsContainer.querySelectorAll('.option-input');
             const options = Array.from(optionInputs)
@@ -707,13 +751,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Close modal immediately and emit
+            // Close modal immediately and emit via REST
             closeModalBtn.click();
-            socket.emit('createPoll', {
-                question,
-                options,
-                userId: user.id || user._id
-            });
+            try {
+                const res = await fetch('/api/polls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, options })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.message || 'Failed to create poll');
+                }
+            } catch (err) {
+                console.error('Error creating poll:', err);
+            }
         });
     }
 
@@ -829,7 +881,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 if (data.success) {
                     user = data.user;
-                    localStorage.setItem('user', JSON.stringify(user));
                     document.getElementById('current-username').textContent = user.name;
                     if (user.avatarUrl && document.getElementById('header-avatar')) {
                         document.getElementById('header-avatar').src = user.avatarUrl;

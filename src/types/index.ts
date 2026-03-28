@@ -34,3 +34,9 @@ export interface ChatMessage {
     fileType?: string;
     timestamp: Date;
 }
+
+export interface UserUpdatePayload {
+    name: string;
+    avatarPublicId?: string;
+    avatarResourceType?: string;
+}

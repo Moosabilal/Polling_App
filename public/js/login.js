@@ -3,9 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMsg = document.getElementById('error-message');
 
     // If user is already logged in, redirect to dashboard
-    if (localStorage.getItem('user')) {
-        window.location.replace('./dashboard.html');
-    }
+    fetch('./api/auth/me')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.user) {
+                window.location.replace('./dashboard.html');
+            }
+        })
+        .catch(() => { });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -41,11 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            console.log('the data222', data)
 
             if (data.success && data.user) {
-                // Save user detals
-                localStorage.setItem('user', JSON.stringify(data.user));
                 // Redirect
                 window.location.replace('./dashboard.html');
             } else {

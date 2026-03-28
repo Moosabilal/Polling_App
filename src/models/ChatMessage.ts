@@ -9,6 +9,9 @@ export interface IChatMessage extends Document {
     fileResourceType?: string;
     fileName?: string;
     fileType?: string;
+    avatarUrl?: string;
+    fileUrl?: string;
+    avatarResourceType?: string;
     createdAt: Date;
 }
 

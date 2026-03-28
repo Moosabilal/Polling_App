@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
-import jwt from 'jsonwebtoken';
+import { signToken } from '../../utils/jwt';
 import { TYPES } from '../../DI/types';
 import { IAuthController } from '../interfaces/IAuthController';
 import { IUserService } from '../../services/interfaces/IUserService';
 import { AuthRequest } from '../../middleware/auth';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+import { User } from '../../types';
 
 @injectable()
 export class AuthController implements IAuthController {
+
     constructor(@inject(TYPES.IUserService) private userService: IUserService) { }
 
     register = async (req: Request, res: Response): Promise<void> => {
@@ -18,8 +18,13 @@ export class AuthController implements IAuthController {
             const user = await this.userService.register(name, email, password);
 
             this.sendTokenResponse(user, res);
-        } catch (error: any) {
-            res.status(400).json({ success: false, message: error.message });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(400).json({ success: false, message: error.message });
+                return;
+            } else {
+                res.status(400).json({ success: false, message: 'An unknown error occurred' });
+            }
         }
     }
 
@@ -34,8 +39,13 @@ export class AuthController implements IAuthController {
             }
 
             this.sendTokenResponse(user, res);
-        } catch (error: any) {
-            res.status(400).json({ success: false, message: error.message });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(400).json({ success: false, message: error.message });
+                return;
+            } else {
+                res.status(400).json({ success: false, message: 'An unknown error occurred' });
+            }
         }
     }
 
@@ -47,8 +57,13 @@ export class AuthController implements IAuthController {
             }
             const user = await this.userService.getUserById(req.user.id);
             res.status(200).json({ success: true, user });
-        } catch (error: any) {
-            res.status(400).json({ success: false, message: error.message });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(400).json({ success: false, message: error.message });
+                return;
+            } else {
+                res.status(400).json({ success: false, message: 'An unknown error occurred' });
+            }
         }
     }
 
@@ -70,15 +85,18 @@ export class AuthController implements IAuthController {
                 return;
             }
             res.status(200).json({ success: true, user: updatedUser });
-        } catch (error: any) {
-            res.status(400).json({ success: false, message: error.message });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                res.status(400).json({ success: false, message: error.message });
+                return;
+            } else {
+                res.status(400).json({ success: false, message: 'An unknown error occurred' });
+            }
         }
     }
 
-    private sendTokenResponse(user: any, res: Response) {
-        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-            expiresIn: '24h'
-        });
+    private sendTokenResponse(user: User, res: Response) {
+        const token = signToken({ id: user.id });
 
         const cookieOptions = {
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
