@@ -1,8 +1,7 @@
 import { Poll } from '../../types';
 
 export interface IPollRepository {
-    getPoll(id: string): Promise<Poll | null>;
-    getAllPolls(): Promise<Poll[]>;
+    getPollsPaginated(page: number, limit: number): Promise<{ polls: Poll[], totalCount: number }>;
     addVote(pollId: string, optionId: string, userId: string): Promise<Poll | null>;
     createPoll(question: string, options: string[]): Promise<Poll>;
     updatePoll(pollId: string, question: string, optionTexts: string[]): Promise<Poll | null>;

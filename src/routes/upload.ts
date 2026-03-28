@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 import { authMiddleware } from '../middleware/auth';
 
 cloudinary.config({
@@ -10,7 +10,7 @@ cloudinary.config({
 
 const router = Router();
 
-router.post('/', authMiddleware as any, async (req: Request, res: Response) => {
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
     try {
         const { data, fileName, fileType, folder } = req.body;
 
@@ -24,7 +24,7 @@ router.post('/', authMiddleware as any, async (req: Request, res: Response) => {
         if (fileType && fileType.startsWith('image/')) resourceType = 'image';
         else if (fileType && fileType.startsWith('video/')) resourceType = 'video';
 
-        const uploadOptions: any = {
+        const uploadOptions: UploadApiOptions = {
             folder: folder || 'spacevote/chat',
             type: 'authenticated', // Restrict access; requires signed URLs
             resource_type: resourceType,
@@ -42,8 +42,9 @@ router.post('/', authMiddleware as any, async (req: Request, res: Response) => {
             fileName: fileName || 'file',
             fileType: fileType || result.resource_type,
         });
-    } catch (err: any) {
-        console.error('[UPLOAD] Cloudinary upload failed:', err.message);
+    } catch (err: unknown) {
+        const error = err as Error;
+        console.error('[UPLOAD] Cloudinary upload failed:', error.message);
         return res.status(500).json({ success: false, message: 'Upload failed. Please try again.' });
     }
 });
