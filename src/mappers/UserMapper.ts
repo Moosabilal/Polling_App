@@ -9,8 +9,6 @@ export class UserMapper {
         if (userDoc.avatarPublicId) {
             const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dpcgcvfdp';
             const resourceType = userDoc.avatarResourceType || 'image';
-            // Generate a signed authenticated URL valid for a certain period
-            // Note: Since we are not passing sign_url in a complex way, we can use the cloudinary SDK util
             avatarUrl = cloudinary.utils.url(userDoc.avatarPublicId, {
                 resource_type: resourceType,
                 type: 'authenticated',

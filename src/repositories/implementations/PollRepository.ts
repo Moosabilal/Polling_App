@@ -78,14 +78,12 @@ export class PollRepository implements IPollRepository {
         if (!poll) return null;
 
         poll.question = question;
-        // Rebuild options preserving IDs where possible for voters continuity
         const newOptions = optionTexts.map((text, i) => ({
             id: (poll.options[i] as { id: string })?.id || uuidv4(),
             text,
             votes: 0
         }));
         poll.options = newOptions;
-        // Reset all votes since options may have changed
         poll.voters = [];
 
         await poll.save();
