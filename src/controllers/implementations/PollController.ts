@@ -6,10 +6,6 @@ import { IPollService } from '../../services/interfaces/IPollService.js';
 import { IUserService } from '../../services/interfaces/IUserService.js';
 import { Server as SocketIOServer } from 'socket.io';
 
-// export interface IPollControllerExtended extends IPollController {
-//     createPoll(req: Request, res: Response): Promise<void>;
-// }
-
 @injectable()
 export class PollController implements IPollController {
 

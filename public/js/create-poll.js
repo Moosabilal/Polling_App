@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Check auth
     const userData = localStorage.getItem('user');
     let user = JSON.parse(userData || '{}');
     if (user.name) document.getElementById('current-username').textContent = user.name;
@@ -55,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // When the poll is successfully created, redirect back to dashboard
     socket.on('newPollCreated', () => {
         window.location.href = './dashboard.html';
     });

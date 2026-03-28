@@ -29,7 +29,6 @@ export class SocketHandler {
                 console.error('Error fetching initial data:', error);
             }
 
-            // Handle voting
             socket.on('vote', async ({ pollId, optionId, userId: clientUserId }) => {
                 try {
                     let userId = clientUserId;
@@ -67,7 +66,6 @@ export class SocketHandler {
                 }
             });
 
-            // Chat messages
             socket.on('sendMessage', async ({ userId, name, text, filePublicId, fileResourceType, fileName, fileType }) => {
                 try {
                     const userObj = await this.userService.getUserById(userId);
@@ -135,7 +133,6 @@ export class SocketHandler {
                 }
             });
 
-            // Typing indicators
             socket.on('typing', ({ name }) => {
                 socket.broadcast.emit('userTyping', { name });
             });

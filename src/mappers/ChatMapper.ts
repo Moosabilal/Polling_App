@@ -10,7 +10,6 @@ export class ChatMapper {
 
         const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dpcgcvfdp';
 
-        // 1. Generate Signed URL for the attached file
         if (msgDoc.filePublicId) {
             const resourceType = msgDoc.fileResourceType || 'image';
             fileUrl = cloudinary.utils.url(msgDoc.filePublicId, {
@@ -20,11 +19,9 @@ export class ChatMapper {
                 secure: true
             });
         } else if (msgDoc.fileUrl) {
-            // Fallback for old messages before the signed URL migration
             fileUrl = msgDoc.fileUrl;
         }
 
-        // 2. Generate Signed URL for the user's avatar
         if (msgDoc.avatarPublicId) {
             const avatarResourceType = msgDoc.avatarResourceType || 'image';
             avatarUrl = cloudinary.utils.url(msgDoc.avatarPublicId, {
@@ -34,7 +31,6 @@ export class ChatMapper {
                 secure: true
             });
         } else if (msgDoc.avatarUrl) {
-            // Fallback for old messages
             avatarUrl = msgDoc.avatarUrl;
         } else if (msgDoc.name) {
             avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(msgDoc.name)}&background=random`;
