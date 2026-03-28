@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('login-form');
     const errorMsg = document.getElementById('error-message');
 
-    // If user is already logged in, redirect to dashboard
     fetch('./api/auth/me')
         .then(res => res.json())
         .then(data => {
@@ -36,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Use relative path for API calls
             const response = await fetch('./api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -48,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success && data.user) {
-                // Redirect
                 window.location.replace('./dashboard.html');
             } else {
                 errorMsg.textContent = data.message || 'Login failed. Please try again.';

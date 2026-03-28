@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let user = {};
     const headerAvatar = document.getElementById('header-avatar');
 
-    // Verify auth with server
     const checkAuth = async () => {
         try {
             const response = await fetch('./api/auth/me');
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const initAdminFeatures = () => {
 
-        // 1. Show the Create Poll button
         if (navCreatePollBtn) {
             navCreatePollBtn.style.display = 'inline-flex';
             navCreatePollBtn.addEventListener('click', () => {
@@ -35,11 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 2. Show Edit/Delete buttons
         if (editPollBtn) {
             editPollBtn.style.display = 'inline-flex';
-            // Move the click listener here so it only attaches if you ARE admin
-            editPollBtn.onclick = () => { // using onclick ensures we don't stack listeners
+            editPollBtn.onclick = () => {
                 if (!currentPoll) return;
                 editPollQuestionInput.value = currentPoll.question;
                 editPollOptionsContainer.innerHTML = '';
@@ -78,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     checkAuth();
 
-    // Custom Popup Logic
     window.showCustomPopup = (title, message, isConfirm = false, icon = '⚠️') => {
         return new Promise((resolve) => {
             const popupModal = document.getElementById('custom-popup-modal');
@@ -111,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Logout
     document.getElementById('logout-btn').addEventListener('click', async () => {
         const confirmed = await window.showCustomPopup('Logout', 'Are you sure you want to disconnect from SpaceVote?', true, '🚪');
         if (!confirmed) return;
@@ -124,12 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.replace('./index.html');
     });
 
-    // Global helper: download a cross-origin file via fetch → Blob → temporary <a> click
-    // This bypasses the browser restriction where the HTML `download` attribute is ignored
-    // for cross-origin URLs (Cloudinary is cross-origin).
     window.downloadChatFile = async (url, fileName) => {
         try {
-            // Use our backend proxy to avoid CORS issues on raw/pdf Cloudinary resources
             const proxyUrl = `./api/proxy-download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(fileName)}`;
             const response = await fetch(proxyUrl);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -144,30 +134,24 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
         } catch (err) {
             console.error('Download failed:', err);
-            // Fallback: open in new tab
             window.open(url, '_blank');
         }
     };
 
-    // Socket Connection
     const socket = io();
 
-    // State
     let currentPoll = null;
     let typingTimeout = null;
 
-    // DOM Elements
     const pollQuestion = document.getElementById('poll-question');
     const pollOptionsContainer = document.getElementById('poll-options');
     const totalVotesCount = document.getElementById('total-votes-count');
 
-    // Poll Selection & Creation Elements
     const pollPaginationBox = document.getElementById('poll-pagination');
     const navCreatePollBtn = document.getElementById('nav-create-poll-btn');
     const editPollBtn = document.getElementById('edit-poll-btn');
     const deletePollBtn = document.getElementById('delete-poll-btn');
 
-    // Edit Poll Modal Elements
     const editPollModal = document.getElementById('edit-poll-modal');
     const closeEditPollBtn = document.getElementById('close-edit-poll-btn');
     const editPollQuestionInput = document.getElementById('edit-poll-question');
@@ -175,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const editAddOptionBtn = document.getElementById('edit-add-option-btn');
     const saveEditPollBtn = document.getElementById('save-edit-poll-btn');
 
-    // Modal Elements
     const createPollModal = document.getElementById('create-poll-modal');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const addOptionBtn = document.getElementById('add-option-btn');
@@ -209,9 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatFilePreviewName = document.getElementById('chat-file-preview-name');
     const chatFileRemoveBtn = document.getElementById('chat-file-remove-btn');
 
-    let pendingFile = null; // { fileUrl, fileName, fileType }
+    let pendingFile = null;
 
-    // Helper Functions
     const toastContainer = document.getElementById('toast-container');
     const muteBtn = document.getElementById('mute-btn');
 
@@ -259,13 +241,11 @@ document.addEventListener('DOMContentLoaded', () => {
         pollQuestion.textContent = poll.question;
         pollOptionsContainer.innerHTML = '';
 
-        // Calculate total votes
         const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
         totalVotesCount.textContent = totalVotes;
 
         poll.options.forEach(option => {
             const optionEl = document.createElement('div');
-            // Ensure ID comparison works (string vs potentially objectID)
             const userIdStr = user.id || user._id;
 
             let hasVotedForThis = false;
@@ -293,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="poll-option-stats">${option.votes} votes (${percentage}%) ${hasVotedForThis ? '✓' : ''}</div>
       `;
 
-            // Always allow click: it's up to the server to handle toggle/switch logic
             optionEl.addEventListener('click', () => {
                 socket.emit('vote', { pollId: poll.id, optionId: option.id, userId: userIdStr });
             });
@@ -451,12 +430,9 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     };
 
-    // Global click listener to close dropdowns
     document.addEventListener('click', () => {
         document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
     });
-
-    // Load Initial Poll via REST
     const loadInitialPoll = async () => {
         try {
             const res = await fetch('/api/polls?page=1&limit=1');
@@ -488,10 +464,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Load immediately
     loadInitialPoll();
 
-    // Socket Events
     socket.on('initialData', (data) => {
         if (data.chatHistory) {
             chatMessages.innerHTML = '';
@@ -520,7 +494,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     highlightActivePagination(i);
                 } else {
                     pendingFetchIndex = i;
-                    // fetch page (1-indexed) iteratively via REST
                     fetch(`/api/polls?page=${i + 1}&limit=1`)
                         .then(res => res.json())
                         .then(data => {
@@ -554,7 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('pollUpdated', (updatedPoll) => {
         showToast('A vote was just cast!');
 
-        // Update it in allPolls array if loaded
         const index = allPolls.findIndex(p => p && p.id === updatedPoll.id);
         if (index !== -1) {
             allPolls[index] = updatedPoll;
@@ -606,7 +578,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('messageEdited', (updatedMsg) => {
-        // Find existing message element and replace it cleanly using the newly architected creation method
         const msgEl = chatMessages.querySelector(`.message[data-id="${updatedMsg.id}"]`);
         if (msgEl) {
             const newEl = createMessageElement(updatedMsg);
@@ -625,7 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.showCustomPopup('Error', err.message || 'An error occurred', false, '⚠️');
     });
 
-    // Typing logic
     const typers = new Set();
 
     const updateTypingIndicator = () => {
@@ -648,7 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTypingIndicator();
     });
 
-    // Admin / Modal Logic
     if (navCreatePollBtn) {
         if (user.email !== 'admin@gmail.com') {
             navCreatePollBtn.style.display = 'none';
@@ -751,7 +720,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Close modal immediately and emit via REST
             closeModalBtn.click();
             try {
                 const res = await fetch('/api/polls', {
@@ -769,7 +737,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Profile Logic
     const resetProfileModal = () => {
         if (cropperInstance) {
             cropperInstance.destroy();
@@ -900,7 +867,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // File attachment logic
     if (chatAttachBtn) {
         chatAttachBtn.addEventListener('click', () => chatFileInput.click());
     }
@@ -917,10 +883,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Read as local base64 immediately for instant preview
             const reader = new FileReader();
             reader.onload = (ev) => {
-                // Create the state object ONCE and keep closure reference to it
                 const fileState = {
                     localPreviewUrl: ev.target.result,
                     fileName: file.name,
@@ -929,11 +893,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     publicId: null,
                     resourceType: null
                 };
-                pendingFile = fileState;  // point pendingFile at the same object
+                pendingFile = fileState;
                 chatFilePreviewName.textContent = `⏳ Uploading ${file.name}...`;
                 chatFilePreview.style.display = 'flex';
 
-                // Upload to Cloudinary via backend
                 fetch('./api/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -981,7 +944,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Helper: insert a temporary optimistic message in the chat
     const insertOptimisticMessage = (text, file) => {
         const tempId = `optimistic-${Date.now()}`;
         const tempEl = document.createElement('div');
@@ -1018,7 +980,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return tempId;
     };
 
-    // Event Listeners
     chatInput.addEventListener('input', () => {
         socket.emit('typing', { name: user.name });
         clearTimeout(typingTimeout);
@@ -1032,10 +993,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = chatInput.value.trim();
         if (!text && !pendingFile) return;
 
-        // Keep a REFERENCE (not a spread copy) so upload callback mutations are visible
         const fileRef = pendingFile || null;
 
-        // Clear UI immediately
         chatInput.value = '';
         chatInput.focus();
         pendingFile = null;
@@ -1046,14 +1005,11 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.emit('stopTyping', { name: user.name });
 
         if (fileRef) {
-            // Show optimistic message immediately with local preview
             const tempId = insertOptimisticMessage(text, fileRef);
 
-            // Wait for upload to finish if still in progress (max 30s)
             if (fileRef.uploading) {
                 await new Promise(resolve => {
                     const poll = setInterval(() => {
-                        // fileRef is the SAME object the upload callback updates
                         if (!fileRef.uploading) {
                             clearInterval(poll);
                             resolve();
@@ -1063,7 +1019,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Remove optimistic message — server echo inserts the real one
             const tempEl = chatMessages.querySelector(`[data-temp-id="${tempId}"]`);
             if (tempEl) tempEl.remove();
 
