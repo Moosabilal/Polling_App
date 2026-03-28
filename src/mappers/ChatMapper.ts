@@ -1,6 +1,6 @@
-import { ChatMessage } from '../types';
+import { ChatMessage } from '../types/index.js';
 import { Document } from 'mongoose';
-import { IChatMessage } from '../models/ChatMessage';
+import { IChatMessage } from '../models/ChatMessage.js';
 import { v2 as cloudinary } from 'cloudinary';
 
 export class ChatMapper {

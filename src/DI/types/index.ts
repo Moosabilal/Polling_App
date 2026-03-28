@@ -5,7 +5,7 @@ export const TYPES = {
     IUserService: Symbol.for('IUserService') as symbol,
     IPollService: Symbol.for('IPollService') as symbol,
     IChatService: Symbol.for('IChatService') as symbol,
+    SocketServer: Symbol.for('SocketServer') as symbol,
     AuthController: Symbol.for('AuthController') as symbol,
     PollController: Symbol.for('PollController') as symbol,
-    SocketServer: Symbol.for('SocketServer') as symbol
 };

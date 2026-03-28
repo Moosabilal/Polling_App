@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
-import { IChatRepository } from '../interfaces/IChatRepository';
-import { ChatMessage } from '../../types';
-import { ChatMessageModel } from '../../models/ChatMessage';
-import { ChatMapper } from '../../mappers/ChatMapper';
+import { IChatRepository } from '../interfaces/IChatRepository.js';
+import { ChatMessage } from '../../types/index.js';
+import { ChatMessageModel } from '../../models/ChatMessage.js';
+import { ChatMapper } from '../../mappers/ChatMapper.js';
 
 @injectable()
 export class ChatRepository implements IChatRepository {

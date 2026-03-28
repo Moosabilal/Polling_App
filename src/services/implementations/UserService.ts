@@ -1,10 +1,10 @@
 import { injectable, inject } from 'inversify';
-import { TYPES } from '../../DI/types';
-import { IUserService } from '../interfaces/IUserService';
-import { IUserRepository } from '../../repositories/interfaces/IUserRepository';
-import { User } from '../../types';
-import { UserModel } from '../../models/User';
-import { UserMapper } from '../../mappers/UserMapper';
+import { TYPES } from '../../DI/types/index.js';
+import { IUserService } from '../interfaces/IUserService.js';
+import { IUserRepository } from '../../repositories/interfaces/IUserRepository.js';
+import { User } from '../../types/index.js';
+import { UserModel } from '../../models/User.js';
+import { UserMapper } from '../../mappers/UserMapper.js';
 
 @injectable()
 export class UserService implements IUserService {
