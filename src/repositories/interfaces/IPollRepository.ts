@@ -1,4 +1,4 @@
-import { Poll } from '../../types';
+import { Poll } from '../../types/index.js';
 
 export interface IPollRepository {
     getPollsPaginated(page: number, limit: number): Promise<{ polls: Poll[], totalCount: number }>;

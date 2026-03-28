@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
-import { signToken } from '../../utils/jwt';
-import { TYPES } from '../../DI/types';
-import { IAuthController } from '../interfaces/IAuthController';
-import { IUserService } from '../../services/interfaces/IUserService';
-import { AuthRequest } from '../../middleware/auth';
-import { User } from '../../types';
+import { signToken } from '../../utils/jwt.js';
+import { TYPES } from '../../DI/types/index.js';
+import { IAuthController } from '../interfaces/IAuthController.js';
+import { IUserService } from '../../services/interfaces/IUserService.js';
+import { AuthRequest } from '../../middleware/auth.js';
+import { User } from '../../types/index.js';
 
 @injectable()
 export class AuthController implements IAuthController {

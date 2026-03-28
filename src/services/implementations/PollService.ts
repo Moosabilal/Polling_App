@@ -1,8 +1,8 @@
 import { injectable, inject } from 'inversify';
-import { TYPES } from '../../DI/types';
-import { IPollService } from '../interfaces/IPollService';
-import { IPollRepository } from '../../repositories/interfaces/IPollRepository';
-import { Poll } from '../../types';
+import { TYPES } from '../../DI/types/index.js';
+import { IPollService } from '../interfaces/IPollService.js';
+import { IPollRepository } from '../../repositories/interfaces/IPollRepository.js';
+import { Poll } from '../../types/index.js';
 
 @injectable()
 export class PollService implements IPollService {

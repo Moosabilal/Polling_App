@@ -1,6 +1,6 @@
-import { Poll } from '../types';
+import { Poll } from '../types/index.js';
 import { Document } from 'mongoose';
-import { IPollModel, IPollOption, IPollVoter } from '../models/Poll';
+import { IPollModel, IPollOption, IPollVoter } from '../models/Poll.js';
 
 export class PollMapper {
     static toDomain(pollDoc: Document & IPollModel): Poll {

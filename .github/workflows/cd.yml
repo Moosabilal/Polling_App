@@ -1,0 +1,40 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy to AWS EC2 / VPS
+      uses: appleboy/ssh-action@v1.0.3
+      # Only run this step if the SSH variables exist in GitHub Secrets
+      if: env.HOST != ''
+      env:
+        HOST: ${{ secrets.HOST }}
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # 1. Navigate to the App Directory (Update this path to match your server)
+          cd ~/pollingApp/Polling_App
+          
+          # 2. Pull the latest code
+          git pull origin main
+          
+          # 3. Clean install (only production deps if you want to save space)
+          npm install
+          
+          # 4. Build the TypeScript project
+          npm run build
+          
+          # 5. Restart or Start the app
+          # If it's already running, it restarts. If not, it starts.
+          pm2 restart polling-app || pm2 start dist/app.js --name "polling-app"
+          
+          # 6. Save PM2 state
+          pm2 save

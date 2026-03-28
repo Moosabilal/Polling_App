@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
-import { IUserRepository } from '../interfaces/IUserRepository';
-import { User, UserUpdatePayload } from '../../types';
-import { UserModel } from '../../models/User';
-import { UserMapper } from '../../mappers/UserMapper';
+import { IUserRepository } from '../interfaces/IUserRepository.js';
+import { User, UserUpdatePayload } from '../../types/index.js';
+import { UserModel } from '../../models/User.js';
+import { UserMapper } from '../../mappers/UserMapper.js';
 
 @injectable()
 export class UserRepository implements IUserRepository {
