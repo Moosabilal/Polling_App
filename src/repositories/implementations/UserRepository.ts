@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { IUserRepository } from '../interfaces/IUserRepository';
-import { User } from '../../types';
+import { User, UserUpdatePayload } from '../../types';
 import { UserModel } from '../../models/User';
 import { UserMapper } from '../../mappers/UserMapper';
 
@@ -34,7 +34,7 @@ export class UserRepository implements IUserRepository {
     }
 
     async updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null> {
-        const updateData: any = { name };
+        const updateData: UserUpdatePayload = { name };
         if (avatarPublicId) updateData.avatarPublicId = avatarPublicId;
         if (avatarResourceType) updateData.avatarResourceType = avatarResourceType;
 

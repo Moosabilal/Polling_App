@@ -8,12 +8,8 @@ import { Poll } from '../../types';
 export class PollService implements IPollService {
     constructor(@inject(TYPES.IPollRepository) private pollRepository: IPollRepository) { }
 
-    async getPollById(id: string): Promise<Poll | null> {
-        return await this.pollRepository.getPoll(id);
-    }
-
-    async getAllPolls(): Promise<Poll[]> {
-        return await this.pollRepository.getAllPolls();
+    async getPollsPaginated(page: number, limit: number): Promise<{ polls: Poll[], totalCount: number }> {
+        return await this.pollRepository.getPollsPaginated(page, limit);
     }
 
     async addVote(pollId: string, optionId: string, userId: string): Promise<Poll | null> {

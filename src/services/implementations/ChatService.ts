@@ -6,6 +6,7 @@ import { ChatMessage } from '../../types';
 
 @injectable()
 export class ChatService implements IChatService {
+    
     constructor(@inject(TYPES.IChatRepository) private chatRepository: IChatRepository) { }
 
     async addMessage(userId: string, name: string, text: string, avatarPublicId?: string, filePublicId?: string, fileResourceType?: string, fileName?: string, fileType?: string): Promise<ChatMessage> {

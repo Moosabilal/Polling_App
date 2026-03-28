@@ -1,8 +1,10 @@
 import { ChatMessage } from '../types';
+import { Document } from 'mongoose';
+import { IChatMessage } from '../models/ChatMessage';
 import { v2 as cloudinary } from 'cloudinary';
 
 export class ChatMapper {
-    static toDomain(msgDoc: any): ChatMessage {
+    static toDomain(msgDoc: Document & IChatMessage): ChatMessage {
         let fileUrl: string | undefined;
         let avatarUrl: string | undefined;
 
@@ -12,7 +14,7 @@ export class ChatMapper {
         if (msgDoc.filePublicId) {
             const resourceType = msgDoc.fileResourceType || 'image';
             fileUrl = cloudinary.utils.url(msgDoc.filePublicId, {
-                resource_type: resourceType as any,
+                resource_type: resourceType,
                 type: 'authenticated',
                 sign_url: true,
                 secure: true
@@ -26,7 +28,7 @@ export class ChatMapper {
         if (msgDoc.avatarPublicId) {
             const avatarResourceType = msgDoc.avatarResourceType || 'image';
             avatarUrl = cloudinary.utils.url(msgDoc.avatarPublicId, {
-                resource_type: avatarResourceType as any,
+                resource_type: avatarResourceType,
                 type: 'authenticated',
                 sign_url: true,
                 secure: true

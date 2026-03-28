@@ -2,9 +2,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('register-form');
     const errorMsg = document.getElementById('error-message');
 
-    if (localStorage.getItem('user')) {
-        window.location.replace('./dashboard.html');
-    }
+    fetch('./api/auth/me')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.user) {
+                window.location.replace('./dashboard.html');
+            }
+        })
+        .catch(() => { });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -63,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success && data.user) {
-                localStorage.setItem('user', JSON.stringify(data.user));
                 window.location.replace('./dashboard.html');
             } else {
                 errorMsg.textContent = data.message || 'Registration failed.';

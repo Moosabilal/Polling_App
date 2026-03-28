@@ -1,52 +1,49 @@
 import { injectable } from 'inversify';
 import { IPollRepository } from '../interfaces/IPollRepository';
 import { Poll } from '../../types';
-import { PollModel } from '../../models/Poll';
+import { IPollOption, IPollVoter, PollModel } from '../../models/Poll';
 import { v4 as uuidv4 } from 'uuid';
 import { PollMapper } from '../../mappers/PollMapper';
 
 @injectable()
 export class PollRepository implements IPollRepository {
-    async getPoll(id: string): Promise<Poll | null> {
-        const poll = await PollModel.findById(id);
-        if (!poll) return null;
-        return PollMapper.toDomain(poll);
-    }
 
-    async getAllPolls(): Promise<Poll[]> {
-
-        const polls = await PollModel.find();
-        return polls.map(p => PollMapper.toDomain(p));
+    async getPollsPaginated(page: number, limit: number): Promise<{ polls: Poll[], totalCount: number }> {
+        const skip = (page - 1) * limit;
+        const [totalCount, pollDocs] = await Promise.all([
+            PollModel.countDocuments(),
+            PollModel.find().sort({ createdAt: -1 }).skip(skip).limit(limit).exec()
+        ]);
+        return {
+            polls: pollDocs.map(p => PollMapper.toDomain(p)),
+            totalCount
+        };
     }
 
     async addVote(pollId: string, optionId: string, userId: string): Promise<Poll | null> {
         const poll = await PollModel.findById(pollId);
         if (!poll) return null;
 
-        // Clean up legacy string voters that break schema validation
         if (poll.voters.length > 0 && !poll.voters[0].optionId) {
             poll.voters = [];
-            poll.options.forEach(opt => opt.votes = 0); // Reset votes for consistency
+            poll.options.forEach(opt => opt.votes = 0);
         }
 
-        const existingVoteIndex = poll.voters.findIndex((v: any) => v.userId === userId || v.toString() === userId);
+        const existingVoteIndex = poll.voters.findIndex((v: IPollVoter) => v.userId === userId || v.toString() === userId);
 
         let shouldAddVote = true;
 
         if (existingVoteIndex !== -1) {
-            const existingVote = poll.voters[existingVoteIndex] as any;
+            const existingVote = poll.voters[existingVoteIndex];
             const previousOptionId = existingVote.optionId;
 
-            // Remove the old vote
             poll.voters.splice(existingVoteIndex, 1);
 
-            // Decrement the old option's vote count
             if (previousOptionId) {
-                const prevOption = poll.options.find(opt => opt.id === previousOptionId);
+                const prevOption = poll.options.find((opt: IPollOption) => opt.id === previousOptionId);
                 if (prevOption) prevOption.votes = Math.max(0, prevOption.votes - 1);
             }
 
-            // If the user clicked the SAME option they had already voted for, it's a toggle OFF
             if (previousOptionId === optionId) {
                 shouldAddVote = false;
             }
@@ -56,7 +53,7 @@ export class PollRepository implements IPollRepository {
             const option = poll.options.find(opt => opt.id === optionId);
             if (option) {
                 option.votes += 1;
-                poll.voters.push({ userId, optionId } as any);
+                poll.voters.push({ userId, optionId });
             }
         }
 
@@ -83,13 +80,13 @@ export class PollRepository implements IPollRepository {
         poll.question = question;
         // Rebuild options preserving IDs where possible for voters continuity
         const newOptions = optionTexts.map((text, i) => ({
-            id: (poll.options[i] as any)?.id || uuidv4(),
+            id: (poll.options[i] as { id: string })?.id || uuidv4(),
             text,
             votes: 0
         }));
-        poll.options = newOptions as any;
+        poll.options = newOptions;
         // Reset all votes since options may have changed
-        poll.voters = [] as any;
+        poll.voters = [];
 
         await poll.save();
         return PollMapper.toDomain(poll);

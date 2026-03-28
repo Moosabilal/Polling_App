@@ -6,6 +6,7 @@ import { ChatMapper } from '../../mappers/ChatMapper';
 
 @injectable()
 export class ChatRepository implements IChatRepository {
+    
     async saveMessage(userId: string, name: string, text: string, avatarPublicId?: string, filePublicId?: string, fileResourceType?: string, fileName?: string, fileType?: string): Promise<ChatMessage> {
         const message = new ChatMessageModel({ userId, name, text, avatarPublicId, filePublicId, fileResourceType, fileName, fileType });
         await message.save();
@@ -17,7 +18,6 @@ export class ChatRepository implements IChatRepository {
             .sort({ createdAt: -1 })
             .limit(limit);
 
-        // Reverse so they are in chronological order
         return messages.reverse().map(msg => ChatMapper.toDomain(msg));
     }
 
