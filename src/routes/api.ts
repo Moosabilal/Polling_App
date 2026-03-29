@@ -13,27 +13,22 @@ const router = Router();
 
 export default function setupApiRoutes() {
 
-    // Resolve Controllers
     const authController = container.get<IAuthController>(TYPES.AuthController);
     const pollController = container.get<IPollController>(TYPES.PollController);
 
-    // Auth Routes
     router.post('/auth/register', authController.register);
     router.post('/auth/login', authController.login);
     router.post('/auth/logout', authController.logout);
     router.get('/auth/me', authMiddleware, authController.me);
     router.put('/auth/profile', authMiddleware, authController.profile);
 
-    // Poll Routes
     router.get('/polls', pollController.getPolls);
     router.post('/polls', authMiddleware, pollController.createPoll);
     router.put('/polls/:id', authMiddleware, pollController.editPoll);
     router.delete('/polls/:id', authMiddleware, pollController.deletePoll);
 
-    // File Upload Route
     router.use('/upload', uploadRouter);
 
-    // Proxy download — fetches Cloudinary URL server-side, avoids CORS on browser download
     router.get('/proxy-download', (req, res) => {
         const url = req.query.url as string;
         const name = (req.query.name as string) || 'file';
