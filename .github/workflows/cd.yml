@@ -34,7 +34,7 @@ jobs:
           
           # 5. Restart or Start the app
           # If it's already running, it restarts. If not, it starts.
-          pm2 restart polling-app || pm2 start dist/app.js --name "polling-app"
+          pm2 restart polling-app || pm2 start dist/server.js --name "polling-app"
           
           # 6. Save PM2 state
           pm2 save
