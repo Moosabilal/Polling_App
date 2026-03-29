@@ -21,7 +21,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           # 1. Navigate to the App Directory (Update this path to match your server)
-          cd ~/pollingApp/Polling_App
+          cd ~/Polling_App
           
           # 2. Pull the latest code
           git pull origin main
