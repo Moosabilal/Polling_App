@@ -5,6 +5,7 @@ import { IPollController } from '../interfaces/IPollController.js';
 import { IPollService } from '../../services/interfaces/IPollService.js';
 import { IUserService } from '../../services/interfaces/IUserService.js';
 import { Server as SocketIOServer } from 'socket.io';
+import { HTTP_STATUS, RESPONSE_MESSAGES } from '../../utils/constants.js';
 
 @injectable()
 export class PollController implements IPollController {
@@ -21,13 +22,13 @@ export class PollController implements IPollController {
             const limit = parseInt(req.query.limit as string) || 1;
 
             const { polls, totalCount } = await this.pollService.getPollsPaginated(page, limit);
-            res.status(200).json({ success: true, polls, totalCount });
+            res.status(HTTP_STATUS.OK).json({ success: true, polls, totalCount });
         } catch (error: unknown) {
             if (error instanceof Error) {
-                res.status(400).json({ success: false, message: error.message });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
                 return;
             }
-            res.status(400).json({ success: false, message: 'An unknown error occurred' });
+            res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.UNKNOWN_ERROR });
         }
     }
 
@@ -39,13 +40,13 @@ export class PollController implements IPollController {
 
             this.io.emit('newPollCreated', newPoll);
 
-            res.status(201).json({ success: true, poll: newPoll });
+            res.status(HTTP_STATUS.CREATED).json({ success: true, poll: newPoll });
         } catch (error: unknown) {
             if (error instanceof Error) {
-                res.status(400).json({ success: false, message: error.message });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
                 return;
             }
-            res.status(400).json({ success: false, message: 'An unknown error occurred' });
+            res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.UNKNOWN_ERROR });
         }
     }
 
@@ -57,16 +58,16 @@ export class PollController implements IPollController {
             const updatedPoll = await this.pollService.updatePoll(pollId, question, options);
             if (updatedPoll) {
                 this.io.emit('pollUpdated', updatedPoll);
-                res.status(200).json({ success: true, poll: updatedPoll });
+                res.status(HTTP_STATUS.OK).json({ success: true, poll: updatedPoll });
             } else {
-                res.status(404).json({ success: false, message: 'Poll not found' });
+                res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: RESPONSE_MESSAGES.POLL_NOT_FOUND });
             }
         } catch (error: unknown) {
             if (error instanceof Error) {
-                res.status(400).json({ success: false, message: error.message });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
                 return;
             }
-            res.status(400).json({ success: false, message: 'An unknown error occurred' });
+            res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.UNKNOWN_ERROR });
         }
     }
 
@@ -77,16 +78,16 @@ export class PollController implements IPollController {
             const success = await this.pollService.deletePoll(pollId);
             if (success) {
                 this.io.emit('pollDeleted', { pollId });
-                res.status(200).json({ success: true });
+                res.status(HTTP_STATUS.OK).json({ success: true });
             } else {
-                res.status(404).json({ success: false, message: 'Poll not found' });
+                res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: RESPONSE_MESSAGES.POLL_NOT_FOUND });
             }
         } catch (error: unknown) {
             if (error instanceof Error) {
-                res.status(400).json({ success: false, message: error.message });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
                 return;
             }
-            res.status(400).json({ success: false, message: 'An unknown error occurred' });
+            res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.UNKNOWN_ERROR });
         }
     }
 }

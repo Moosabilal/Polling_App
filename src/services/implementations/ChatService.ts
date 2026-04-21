@@ -3,7 +3,7 @@ import { TYPES } from '../../DI/types/index.js';
 import { IChatService } from '../interfaces/IChatService.js';
 import { IChatRepository } from '../../repositories/interfaces/IChatRepository.js';
 import { ChatMessage } from '../../types/index.js';
-
+import { RESPONSE_MESSAGES } from '../../utils/constants.js';
 @injectable()
 export class ChatService implements IChatService {
     
@@ -11,7 +11,7 @@ export class ChatService implements IChatService {
 
     async addMessage(userId: string, name: string, text: string, avatarPublicId?: string, filePublicId?: string, fileResourceType?: string, fileName?: string, fileType?: string): Promise<ChatMessage> {
         if (!text && !filePublicId) {
-            throw new Error('Message cannot be empty');
+            throw new Error(RESPONSE_MESSAGES.MESSAGE_CANNOT_BE_EMPTY);
         }
         return await this.chatRepository.saveMessage(userId, name, text?.trim() || '', avatarPublicId, filePublicId, fileResourceType, fileName, fileType);
     }
@@ -22,7 +22,7 @@ export class ChatService implements IChatService {
 
     async updateMessage(msgId: string, userId: string, newText: string): Promise<ChatMessage | null> {
         if (!newText || newText.trim() === '') {
-            throw new Error('Message cannot be empty');
+            throw new Error(RESPONSE_MESSAGES.MESSAGE_CANNOT_BE_EMPTY);
         }
         return await this.chatRepository.updateMessage(msgId, userId, newText.trim());
     }
