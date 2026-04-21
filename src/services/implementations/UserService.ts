@@ -5,15 +5,16 @@ import { IUserRepository } from '../../repositories/interfaces/IUserRepository.j
 import { User } from '../../types/index.js';
 import { UserModel } from '../../models/User.js';
 import { UserMapper } from '../../mappers/UserMapper.js';
+import { RESPONSE_MESSAGES } from '../../utils/constants.js';
 
 @injectable()
 export class UserService implements IUserService {
     constructor(@inject(TYPES.IUserRepository) private userRepository: IUserRepository) { }
 
     async register(name: string, email: string, password: string): Promise<User> {
-        if (!name || !email || !password) throw new Error('All fields are required');
+        if (!name || !email || !password) throw new Error(RESPONSE_MESSAGES.ALL_FIELDS_REQUIRED);
         const existing = await this.userRepository.findByEmail(email);
-        if (existing) throw new Error('Email already registered');
+        if (existing) throw new Error(RESPONSE_MESSAGES.EMAIL_ALREADY_REGISTERED);
         return this.userRepository.register(name, email, password);
     }
 
@@ -40,7 +41,7 @@ export class UserService implements IUserService {
     }
 
     async updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null> {
-        if (!name || name.trim() === '') throw new Error('Name cannot be empty');
+        if (!name || name.trim() === '') throw new Error(RESPONSE_MESSAGES.NAME_CANNOT_BE_EMPTY);
         return this.userRepository.updateProfile(id, name.trim(), avatarPublicId, avatarResourceType);
     }
 }

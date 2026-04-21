@@ -6,6 +6,7 @@ import { IAuthController } from '../interfaces/IAuthController.js';
 import { IUserService } from '../../services/interfaces/IUserService.js';
 import { AuthRequest } from '../../middleware/auth.js';
 import { User } from '../../types/index.js';
+import { HTTP_STATUS, RESPONSE_MESSAGES } from '../../utils/constants.js';
 
 @injectable()
 export class AuthController implements IAuthController {
@@ -20,10 +21,10 @@ export class AuthController implements IAuthController {
             this.sendTokenResponse(user, res);
         } catch (error: unknown) {
             if (error instanceof Error) {
-                res.status(400).json({ success: false, message: error.message });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
                 return;
             } else {
-                res.status(400).json({ success: false, message: 'An unknown error occurred' });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.UNKNOWN_ERROR });
             }
         }
     }
@@ -34,17 +35,17 @@ export class AuthController implements IAuthController {
             const user = await this.userService.login(email, password);
 
             if (!user) {
-                res.status(401).json({ success: false, message: 'Invalid credentials' });
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: RESPONSE_MESSAGES.INVALID_CREDENTIALS });
                 return;
             }
 
             this.sendTokenResponse(user, res);
         } catch (error: unknown) {
             if (error instanceof Error) {
-                res.status(400).json({ success: false, message: error.message });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
                 return;
             } else {
-                res.status(400).json({ success: false, message: 'An unknown error occurred' });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.UNKNOWN_ERROR });
             }
         }
     }
@@ -52,45 +53,45 @@ export class AuthController implements IAuthController {
     me = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             if (!req.user) {
-                res.status(401).json({ success: false, message: 'Not authenticated' });
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: RESPONSE_MESSAGES.NOT_AUTHENTICATED });
                 return;
             }
             const user = await this.userService.getUserById(req.user.id);
-            res.status(200).json({ success: true, user });
+            res.status(HTTP_STATUS.OK).json({ success: true, user });
         } catch (error: unknown) {
             if (error instanceof Error) {
-                res.status(400).json({ success: false, message: error.message });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
                 return;
             } else {
-                res.status(400).json({ success: false, message: 'An unknown error occurred' });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.UNKNOWN_ERROR });
             }
         }
     }
 
     logout = async (req: Request, res: Response): Promise<void> => {
         res.clearCookie('token');
-        res.json({ success: true, message: 'Logged out successfully' });
+        res.status(HTTP_STATUS.OK).json({ success: true, message: RESPONSE_MESSAGES.LOGGED_OUT });
     }
 
     profile = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             if (!req.user) {
-                res.status(401).json({ success: false, message: 'Not authenticated' });
+                res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: RESPONSE_MESSAGES.NOT_AUTHENTICATED });
                 return;
             }
             const { name, avatarPublicId, avatarResourceType } = req.body;
             const updatedUser = await this.userService.updateProfile(req.user.id, name, avatarPublicId, avatarResourceType);
             if (!updatedUser) {
-                res.status(404).json({ success: false, message: 'User not found' });
+                res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: RESPONSE_MESSAGES.USER_NOT_FOUND });
                 return;
             }
-            res.status(200).json({ success: true, user: updatedUser });
+            res.status(HTTP_STATUS.OK).json({ success: true, user: updatedUser });
         } catch (error: unknown) {
             if (error instanceof Error) {
-                res.status(400).json({ success: false, message: error.message });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
                 return;
             } else {
-                res.status(400).json({ success: false, message: 'An unknown error occurred' });
+                res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: RESPONSE_MESSAGES.UNKNOWN_ERROR });
             }
         }
     }
@@ -104,7 +105,7 @@ export class AuthController implements IAuthController {
             secure: process.env.NODE_ENV === 'production'
         };
 
-        res.status(200)
+        res.status(HTTP_STATUS.OK)
             .cookie('token', token, cookieOptions)
             .json({ success: true, user });
     }

@@ -3,7 +3,7 @@ import { TYPES } from '../../DI/types/index.js';
 import { IPollService } from '../interfaces/IPollService.js';
 import { IPollRepository } from '../../repositories/interfaces/IPollRepository.js';
 import { Poll } from '../../types/index.js';
-
+import { RESPONSE_MESSAGES } from '../../utils/constants.js';
 @injectable()
 export class PollService implements IPollService {
     constructor(@inject(TYPES.IPollRepository) private pollRepository: IPollRepository) { }
@@ -18,14 +18,14 @@ export class PollService implements IPollService {
 
     async createPoll(question: string, options: string[]): Promise<Poll> {
         if (!question || options.length < 2) {
-            throw new Error('Poll must have a question and at least 2 options.');
+            throw new Error(RESPONSE_MESSAGES.INVALID_POLL_OPTIONS);
         }
         return await this.pollRepository.createPoll(question, options);
     }
 
     async updatePoll(pollId: string, question: string, options: string[]): Promise<Poll | null> {
         if (!question || options.length < 2) {
-            throw new Error('Poll must have a question and at least 2 options.');
+            throw new Error(RESPONSE_MESSAGES.INVALID_POLL_OPTIONS);
         }
         return await this.pollRepository.updatePoll(pollId, question, options);
     }

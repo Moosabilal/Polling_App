@@ -18,6 +18,9 @@ SpaceVote is a real-time polling and community chat application built using Node
 ## Getting Started
 
 1.  **Clone or Download the repository.**
+    ```bash
+    git clone https://github.com/Moosabilal/Polling_App.git
+    ```
 2.  **Install dependencies**:
     ```bash
     npm install
