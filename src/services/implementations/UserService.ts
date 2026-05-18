@@ -44,8 +44,12 @@ export class UserService implements IUserService {
         await this.userRepository.removeUser(id);
     }
 
-    async updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null> {
+    async updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User> {
         if (!name || name.trim() === '') throw new CustomError(RESPONSE_MESSAGES.NAME_CANNOT_BE_EMPTY, HTTP_STATUS.BAD_REQUEST);
-        return this.userRepository.updateProfile(id, name.trim(), avatarPublicId, avatarResourceType);
+        const updatedUser = await this.userRepository.updateProfile(id, name.trim(), avatarPublicId, avatarResourceType);
+        if (!updatedUser) {
+            throw new CustomError(RESPONSE_MESSAGES.USER_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+        }
+        return updatedUser
     }
 }

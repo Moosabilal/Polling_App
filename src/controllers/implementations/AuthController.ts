@@ -38,10 +38,7 @@ export class AuthController implements IAuthController {
 
     me = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         try {
-            if (!req.user) {
-                throw new CustomError(RESPONSE_MESSAGES.NOT_AUTHENTICATED, HTTP_STATUS.UNAUTHORIZED);
-            }
-            const user = await this.userService.getUserById(req.user.id);
+            const user = await this.userService.getUserById(req.user!.id);
             res.status(HTTP_STATUS.OK).json({ success: true, user });
         } catch (error: unknown) {
             next(error);
@@ -59,14 +56,8 @@ export class AuthController implements IAuthController {
 
     profile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         try {
-            if (!req.user) {
-                throw new CustomError(RESPONSE_MESSAGES.NOT_AUTHENTICATED, HTTP_STATUS.UNAUTHORIZED);
-            }
             const { name, avatarPublicId, avatarResourceType } = req.body;
-            const updatedUser = await this.userService.updateProfile(req.user.id, name, avatarPublicId, avatarResourceType);
-            if (!updatedUser) {
-                throw new CustomError(RESPONSE_MESSAGES.USER_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
-            }
+            const updatedUser = await this.userService.updateProfile(req.user!.id, name, avatarPublicId, avatarResourceType);
             res.status(HTTP_STATUS.OK).json({ success: true, user: updatedUser });
         } catch (error: unknown) {
             next(error);

@@ -7,5 +7,5 @@ export interface IUserService {
     getAllUsers(): Promise<User[]>;
     getUsersByIds(userIds: string[]): Promise<User[]>;
     removeUser(id: string): Promise<void>;
-    updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null>;
+    updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User>;
 }

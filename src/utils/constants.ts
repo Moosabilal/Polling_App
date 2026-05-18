@@ -12,8 +12,8 @@ export enum HTTP_STATUS {
 export const RESPONSE_MESSAGES = {
     // SUCCESS: 'Success',
     // UNKNOWN_ERROR: 'An unknown error occurred',
-    // AUTH_REQUIRED: 'Authentication required',
-    // INVALID_TOKEN: 'Invalid or expired token',
+    AUTH_REQUIRED: 'Authentication required',
+    INVALID_TOKEN: 'Invalid or expired token',
     // NO_FILE_PROVIDED: 'No file data provided.',
     // UPLOAD_FAILED: 'Upload failed. Please try again.',
     // INVALID_URL: 'Invalid URL',
