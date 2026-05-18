@@ -18,6 +18,16 @@ export class UserRepository implements IUserRepository {
         return UserMapper.toDomain(user);
     }
 
+    async getUserAuthDataByEmail(email: string): Promise<{ user: User, passwordHash: string } | null> {
+        const userDoc = await UserModel.findOne({ email });
+        if (!userDoc) return null;
+
+        return {
+            user: UserMapper.toDomain(userDoc),
+            passwordHash: userDoc.password
+        };
+    }
+
     async getUserById(id: string): Promise<User | null> {
         const user = await UserModel.findById(id);
         if (!user) return null;
@@ -30,6 +40,11 @@ export class UserRepository implements IUserRepository {
 
     async getAllUsers(): Promise<User[]> {
         const users = await UserModel.find();
+        return users.map(u => UserMapper.toDomain(u));
+    }
+
+    async getUsersByIds(userIds: string[]): Promise<User[]> {
+        const users = await UserModel.find({ _id: { $in: userIds } });
         return users.map(u => UserMapper.toDomain(u));
     }
 

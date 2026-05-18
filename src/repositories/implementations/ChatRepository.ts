@@ -21,15 +21,15 @@ export class ChatRepository implements IChatRepository {
         return messages.reverse().map(msg => ChatMapper.toDomain(msg));
     }
 
+    async getMessageById(msgId: string): Promise<ChatMessage | null> {
+        const message = await ChatMessageModel.findById(msgId);
+        if (!message) return null;
+        return ChatMapper.toDomain(message);
+    }
+
     async updateMessage(msgId: string, userId: string, newText: string): Promise<ChatMessage | null> {
         const message = await ChatMessageModel.findOne({ _id: msgId, userId: userId });
         if (!message) return null;
-
-        const now = new Date();
-        const diffMs = now.getTime() - message.createdAt.getTime();
-        if (diffMs > 15 * 60 * 1000) {
-            throw new Error('Messages can only be edited within 15 minutes of sending.');
-        }
 
         message.text = newText;
         await message.save();
