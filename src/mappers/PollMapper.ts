@@ -7,6 +7,7 @@ export class PollMapper {
         return {
             id: pollDoc._id.toString(),
             question: pollDoc.question,
+            creatorId: pollDoc.creatorId,
             options: pollDoc.options.map((opt: IPollOption) => ({
                 id: opt.id,
                 text: opt.text,

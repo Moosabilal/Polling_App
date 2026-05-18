@@ -2,9 +2,10 @@ import { User } from '../../types/index.js';
 
 export interface IUserService {
     register(name: string, email: string, password: string): Promise<User>;
-    login(email: string, password: string): Promise<User | null>;
+    login(email: string, password: string): Promise<User>;
     getUserById(id: string): Promise<User | null>;
     getAllUsers(): Promise<User[]>;
+    getUsersByIds(userIds: string[]): Promise<User[]>;
     removeUser(id: string): Promise<void>;
-    updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null>;
+    updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User>;
 }

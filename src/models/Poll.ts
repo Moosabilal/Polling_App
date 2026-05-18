@@ -13,6 +13,7 @@ export interface IPollVoter {
 
 export interface IPollModel extends Document {
     question: string;
+    creatorId: string;
     options: IPollOption[];
     voters: IPollVoter[];
 }
@@ -30,6 +31,7 @@ const PollOptionSchema: Schema = new Schema({
 
 const PollSchema: Schema = new Schema({
     question: { type: String, required: true },
+    creatorId: { type: String, required: true, default: 'system' },
     options: { type: [PollOptionSchema], required: true },
     voters: { type: [PollVoterSchema], default: [] }
 }, { timestamps: true });

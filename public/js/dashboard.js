@@ -13,9 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headerAvatar.src = user.avatarUrl;
                     headerAvatar.style.display = 'inline-block';
                 }
-                if (user.email === 'admin@gmail.com') {
-                    initAdminFeatures();
-                }
+                initPollFeatures();
             } else {
                 throw new Error('Not authenticated');
             }
@@ -24,17 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const initAdminFeatures = () => {
-
+    const initPollFeatures = () => {
         if (navCreatePollBtn) {
             navCreatePollBtn.style.display = 'inline-flex';
-            navCreatePollBtn.addEventListener('click', () => {
-                createPollModal.classList.remove('hidden');
-            });
+            // Event listener is already attached at the bottom of the file
         }
 
         if (editPollBtn) {
-            editPollBtn.style.display = 'inline-flex';
             editPollBtn.onclick = () => {
                 if (!currentPoll) return;
                 editPollQuestionInput.value = currentPoll.question;
@@ -52,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (deletePollBtn) {
-            deletePollBtn.style.display = 'inline-flex';
             deletePollBtn.onclick = async () => {
                 if (!currentPoll) return;
                 const confirmed = await window.showCustomPopup(
@@ -151,6 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const navCreatePollBtn = document.getElementById('nav-create-poll-btn');
     const editPollBtn = document.getElementById('edit-poll-btn');
     const deletePollBtn = document.getElementById('delete-poll-btn');
+    const detailedResultsModal = document.getElementById('detailed-results-modal');
+    const detailedResultsContent = document.getElementById('detailed-results-content');
+    const closeDetailedResultsBtn = document.getElementById('close-detailed-results-btn');
 
     const editPollModal = document.getElementById('edit-poll-modal');
     const closeEditPollBtn = document.getElementById('close-edit-poll-btn');
@@ -240,6 +236,14 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPoll = poll;
         pollQuestion.textContent = poll.question;
         pollOptionsContainer.innerHTML = '';
+        
+        const userIdStr = user.id || user._id;
+        if (editPollBtn) {
+            editPollBtn.style.display = poll.creatorId === userIdStr ? 'inline-flex' : 'none';
+        }
+        if (deletePollBtn) {
+            deletePollBtn.style.display = poll.creatorId === userIdStr ? 'inline-flex' : 'none';
+        }
 
         const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
         totalVotesCount.textContent = totalVotes;
@@ -279,6 +283,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
             pollOptionsContainer.appendChild(optionEl);
         });
+
+        const existingResultBtn = document.getElementById('view-detailed-results-btn');
+        if (existingResultBtn) existingResultBtn.remove();
+
+        const resultsBtn = document.createElement('button');
+        resultsBtn.id = 'view-detailed-results-btn';
+        resultsBtn.className = 'btn outline-btn btn-small';
+        resultsBtn.textContent = '📊 View Detailed Results';
+        resultsBtn.style.marginTop = '15px';
+        resultsBtn.style.display = 'block';
+        resultsBtn.style.width = '100%';
+        
+        resultsBtn.addEventListener('click', async () => {
+            detailedResultsModal.classList.remove('hidden');
+            detailedResultsContent.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">Loading results...</div>';
+            
+            try {
+                const res = await fetch(`/api/polls/${poll.id}/results`);
+                const data = await res.json();
+                
+                if (data.success && data.results) {
+                    let html = `<h3 style="margin-bottom: 20px; color: #f8fafc;">${data.results.question}</h3>`;
+                    
+                    data.results.options.forEach(opt => {
+                        html += `
+                        <div style="margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span style="font-weight: 600; color: #f1f5f9;">${opt.text}</span>
+                                <span style="color: #6366f1; font-weight: bold;">${opt.votes} votes</span>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        `;
+                        
+                        if (opt.voters && opt.voters.length > 0) {
+                            opt.voters.forEach(voter => {
+                                const avatar = voter.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(voter.name)}&background=random`;
+                                html += `
+                                <div style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 20px;">
+                                    <img src="${avatar}" alt="${voter.name}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
+                                    <span style="font-size: 0.8rem; color: #cbd5e1;">${voter.name}</span>
+                                </div>
+                                `;
+                            });
+                        } else {
+                            html += `<span style="font-size: 0.85rem; color: #64748b; font-style: italic;">No votes yet.</span>`;
+                        }
+                        
+                        html += `</div></div>`;
+                    });
+                    
+                    detailedResultsContent.innerHTML = html;
+                } else {
+                    detailedResultsContent.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">Failed to load results.</div>';
+                }
+            } catch (err) {
+                console.error(err);
+                detailedResultsContent.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">An error occurred.</div>';
+            }
+        });
+        
+        pollOptionsContainer.parentNode.appendChild(resultsBtn);
     };
 
     const createMessageElement = (msg) => {
@@ -448,16 +513,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 pollOptionsContainer.innerHTML = '';
                 totalVotesCount.textContent = '0';
 
-                if (user.email === 'admin@gmail.com') {
-                    const addBtn = document.createElement('button');
-                    addBtn.className = 'btn primary-btn';
-                    addBtn.textContent = '+ Create First Poll';
-                    addBtn.style.marginTop = '20px';
-                    addBtn.addEventListener('click', () => {
-                        createPollModal.classList.remove('hidden');
-                    });
-                    pollOptionsContainer.appendChild(addBtn);
-                }
+                const addBtn = document.createElement('button');
+                addBtn.className = 'btn primary-btn';
+                addBtn.textContent = '+ Create First Poll';
+                addBtn.style.marginTop = '20px';
+                addBtn.addEventListener('click', () => {
+                    createPollModal.classList.remove('hidden');
+                });
+                pollOptionsContainer.appendChild(addBtn);
             }
         } catch (err) {
             console.error('Failed to load initial poll', err);
@@ -554,14 +617,12 @@ document.addEventListener('DOMContentLoaded', () => {
             pollQuestion.innerHTML = '<span style="color: #94a3b8; font-weight: 500;">Polls not yet created</span>';
             pollOptionsContainer.innerHTML = '';
             totalVotesCount.textContent = '0';
-            if (user.email === 'admin@gmail.com') {
-                const addBtn = document.createElement('button');
-                addBtn.className = 'btn primary-btn';
-                addBtn.textContent = '+ Create First Poll';
-                addBtn.style.marginTop = '20px';
-                addBtn.addEventListener('click', () => { createPollModal.classList.remove('hidden'); });
-                pollOptionsContainer.appendChild(addBtn);
-            }
+            const addBtn = document.createElement('button');
+            addBtn.className = 'btn primary-btn';
+            addBtn.textContent = '+ Create First Poll';
+            addBtn.style.marginTop = '20px';
+            addBtn.addEventListener('click', () => { createPollModal.classList.remove('hidden'); });
+            pollOptionsContainer.appendChild(addBtn);
         }
     });
 
@@ -619,13 +680,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (navCreatePollBtn) {
-        if (user.email !== 'admin@gmail.com') {
-            navCreatePollBtn.style.display = 'none';
-        } else {
-            navCreatePollBtn.addEventListener('click', () => {
-                createPollModal.classList.remove('hidden');
-            });
-        }
+        navCreatePollBtn.addEventListener('click', () => {
+            createPollModal.classList.remove('hidden');
+        });
+    }
+
+    if (closeDetailedResultsBtn) {
+        closeDetailedResultsBtn.addEventListener('click', () => {
+            detailedResultsModal.classList.add('hidden');
+        });
     }
 
     if (closeEditPollBtn) {

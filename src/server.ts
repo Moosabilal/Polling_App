@@ -16,6 +16,7 @@ import { SocketHandler } from './socket/SocketHandler.js';
 import { TYPES } from './DI/types/index.js';
 import { container } from './DI/container/inversify.config.js';
 import setupApiRoutes from './routes/api.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,6 +51,9 @@ app.use((req, res, next) => {
     }
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
+
+// Error handling middleware should be the last piece of middleware
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

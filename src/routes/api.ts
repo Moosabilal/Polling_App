@@ -24,6 +24,7 @@ export default function setupApiRoutes() {
 
     router.get('/polls', pollController.getPolls);
     router.post('/polls', authMiddleware, pollController.createPoll);
+    router.get('/polls/:id/results', authMiddleware, pollController.getPollResults);
     router.put('/polls/:id', authMiddleware, pollController.editPoll);
     router.delete('/polls/:id', authMiddleware, pollController.deletePoll);
 
