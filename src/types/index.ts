@@ -16,9 +16,25 @@ export interface PollOption {
 export interface Poll {
     id: string;
     question: string;
+    creatorId: string;
     options: PollOption[];
     votedUserIds: string[];
     userVotes?: { userId: string, optionId: string }[];
+}
+
+export interface DetailedPollResult {
+    id: string;
+    question: string;
+    options: {
+        id: string;
+        text: string;
+        votes: number;
+        voters: {
+            id: string;
+            name: string;
+            avatarUrl: string;
+        }[];
+    }[];
 }
 
 export interface ChatMessage {

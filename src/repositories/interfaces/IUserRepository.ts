@@ -3,8 +3,10 @@ import { User } from '../../types/index.js';
 export interface IUserRepository {
     register(name: string, email: string, password: string): Promise<User>;
     findByEmail(email: string): Promise<User | null>;
+    getUserAuthDataByEmail(email: string): Promise<{ user: User, passwordHash: string } | null>;
     getUserById(id: string): Promise<User | null>;
     removeUser(id: string): Promise<void>;
     getAllUsers(): Promise<User[]>;
+    getUsersByIds(userIds: string[]): Promise<User[]>;
     updateProfile(id: string, name: string, avatarPublicId?: string, avatarResourceType?: string): Promise<User | null>;
 }

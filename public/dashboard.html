@@ -178,6 +178,18 @@
 
     <div id="toast-container" class="toast-container"></div>
 
+    <div id="detailed-results-modal" class="modal hidden" style="z-index: 10000;">
+        <div class="modal-content glass-panel" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="flex-shrink: 0;">
+                <h2 id="detailed-results-title">📈 Poll Results</h2>
+                <button id="close-detailed-results-btn" class="close-btn">&times;</button>
+            </div>
+            <div id="detailed-results-content" style="overflow-y: auto; padding: 20px; flex-grow: 1;">
+                <div style="text-align: center; color: #94a3b8; padding: 20px;">Loading results...</div>
+            </div>
+        </div>
+    </div>
+
     <div id="custom-popup-modal" class="modal hidden" style="z-index: 10001;">
         <div class="modal-content glass-panel" style="max-width: 400px; text-align: center; padding: 40px 30px;">
             <div id="popup-icon" style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
