@@ -26,7 +26,7 @@
             </div>
             <div class="user-info" style="display: flex; align-items: center; gap: 10px;">
                 <img id="header-avatar" src="" alt="Avatar"
-                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: none; border: 2px solid rgba(255,255,255,0.2);">
+                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: none; border: 2px solid var(--color-border);">
                 <span id="current-username">Guest</span>
                 <button id="mute-btn" class="btn outline-btn" title="Toggle Notifications"
                     style="padding: 6px 10px; font-size: 1.1rem;">🔔</button>
@@ -48,7 +48,7 @@
                         <button id="edit-poll-btn" class="btn outline-btn btn-small" title="Edit Poll"
                             style="display:none;">✏️ Edit</button>
                         <button id="delete-poll-btn" class="btn outline-btn btn-small" title="Delete Poll"
-                            style="display:none; color:#ef4444; border-color:rgba(239,68,68,0.4);">🗑️ Delete</button>
+                            style="display:none; color:var(--color-danger); border-color:var(--color-border);">🗑️ Delete</button>
                         <button id="nav-create-poll-btn" class="btn outline-btn btn-small">+ New</button>
                     </div>
                 </div>
@@ -75,11 +75,11 @@
                     <div id="typing-indicator" class="typing-indicator">
                     </div>
                     <div id="chat-file-preview"
-                        style="display:none; padding: 8px 20px; background: rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.08); display:none; align-items:center; gap:10px;">
+                        style="display:none; padding: 8px 20px; background: var(--color-bg); border-top: 1px solid var(--color-border); align-items:center; gap:10px;">
                         <span id="chat-file-preview-name"
-                            style="font-size:0.85rem; color:#cbd5e1; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                            style="font-size:0.85rem; color:var(--color-text-muted); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
                         <button id="chat-file-remove-btn"
-                            style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.1rem; padding:0;">✕</button>
+                            style="background:none; border:none; color:var(--color-danger); cursor:pointer; font-size:1.1rem; padding:0;">✕</button>
                     </div>
                     <form id="chat-form" class="chat-input-area">
                         <input type="file" id="chat-file-input" accept="image/*,.pdf,.doc,.docx,.txt,.zip"
@@ -151,7 +151,7 @@
 
                 <div id="avatar-preview-container" style="margin-bottom: 15px;">
                     <img id="profile-avatar-preview" src="" alt="Avatar Preview"
-                        style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto; display: none; border: 3px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto; display: none; border: 3px solid var(--color-border);">
                 </div>
 
                 <div id="cropper-wrapper" style="display: none; width: 100%; max-height: 250px; margin-bottom: 15px;">
@@ -185,7 +185,7 @@
                 <button id="close-detailed-results-btn" class="close-btn">&times;</button>
             </div>
             <div id="detailed-results-content" style="overflow-y: auto; padding: 20px; flex-grow: 1;">
-                <div style="text-align: center; color: #94a3b8; padding: 20px;">Loading results...</div>
+                <div style="text-align: center; color: var(--color-text-muted); padding: 20px;">Loading results...</div>
             </div>
         </div>
     </div>
@@ -195,7 +195,7 @@
             <div id="popup-icon" style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
             <h2 id="custom-popup-title" style="font-size: 1.5rem; margin-bottom: 15px;">Notification</h2>
             <p id="custom-popup-message"
-                style="color: #cbd5e1; font-size: 1.05rem; margin-bottom: 30px; line-height: 1.5;"></p>
+                style="color: var(--color-text-muted); font-size: 1.05rem; margin-bottom: 30px; line-height: 1.5;"></p>
             <div style="display: flex; gap: 15px; justify-content: center;">
                 <button id="custom-popup-cancel" class="btn outline-btn" style="flex: 1; display: none;">Cancel</button>
                 <button id="custom-popup-confirm" class="btn primary-btn" style="flex: 1;">OK</button>
