@@ -11,16 +11,16 @@ import { v4 as uuidv4 } from 'uuid';
 @injectable()
 export class PollService implements IPollService {
     constructor(
-        @inject(TYPES.IPollRepository) private pollRepository: IPollRepository,
-        @inject(TYPES.IUserService) private userService: IUserService
+        @inject(TYPES.IPollRepository) private _pollRepository: IPollRepository,
+        @inject(TYPES.IUserService) private _userService: IUserService
     ) { }
 
     async getPollsPaginated(page: number, limit: number): Promise<{ polls: Poll[], totalCount: number }> {
-        return await this.pollRepository.getPollsPaginated(page, limit);
+        return await this._pollRepository.getPollsPaginated(page, limit);
     }
 
     async addVote(pollId: string, optionId: string, userId: string): Promise<Poll | null> {
-        const poll = await this.pollRepository.findById(pollId);
+        const poll = await this._pollRepository.findById(pollId);
         if (!poll) return null;
 
         let voters = poll.userVotes || [];
@@ -58,7 +58,7 @@ export class PollService implements IPollService {
             }
         }
 
-        return await this.pollRepository.updatePollData(pollId, poll.question, poll.options, voters);
+        return await this._pollRepository.updatePollData(pollId, poll.question, poll.options, voters);
     }
 
     async createPoll(question: string, options: string[], creatorId: string): Promise<Poll> {
@@ -72,7 +72,7 @@ export class PollService implements IPollService {
             votes: 0
         }));
 
-        return await this.pollRepository.createPoll({ question, options: pollOptions, creatorId, votedUserIds: [], userVotes: [] });
+        return await this._pollRepository.createPoll({ question, options: pollOptions, creatorId, votedUserIds: [], userVotes: [] });
     }
 
     async updatePoll(pollId: string, creatorId: string, question: string, options: string[]): Promise<Poll | null> {
@@ -80,7 +80,7 @@ export class PollService implements IPollService {
             throw new CustomError(RESPONSE_MESSAGES.INVALID_POLL_OPTIONS, HTTP_STATUS.BAD_REQUEST);
         }
 
-        const poll = await this.pollRepository.findById(pollId);
+        const poll = await this._pollRepository.findById(pollId);
         if(!poll) throw new CustomError(RESPONSE_MESSAGES.POLL_NOT_FOUND, HTTP_STATUS.NOT_FOUND)
         if (poll.creatorId !== creatorId) throw new CustomError(RESPONSE_MESSAGES.NOT_AUTHORIZED, HTTP_STATUS.FORBIDDEN);
 
@@ -90,24 +90,24 @@ export class PollService implements IPollService {
             votes: 0
         }));
 
-        return await this.pollRepository.updatePollData(pollId, question, newOptions, []);
+        return await this._pollRepository.updatePollData(pollId, question, newOptions, []);
     }
 
     async deletePoll(pollId: string, creatorId: string): Promise<boolean> {
-        const deleted = await this.pollRepository.deletePoll(pollId, creatorId);
+        const deleted = await this._pollRepository.deletePoll(pollId, creatorId);
         if (!deleted) throw new CustomError(RESPONSE_MESSAGES.NOT_AUTHORIZED, HTTP_STATUS.FORBIDDEN);
         return deleted;
     }
 
     async getPollResults(pollId: string): Promise<DetailedPollResult | null> {
-        const poll = await this.pollRepository.findById(pollId);
+        const poll = await this._pollRepository.findById(pollId);
         if (!poll) throw new CustomError(RESPONSE_MESSAGES.POLL_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
 
         const voters = poll.userVotes || [];
         const userIds = voters.map(v => v.userId);
         const uniqueUserIds = [...new Set(userIds)];
         
-        const users = await this.userService.getUsersByIds(uniqueUserIds);
+        const users = await this._userService.getUsersByIds(uniqueUserIds);
         const usersMap = new Map();
         users.forEach(u => usersMap.set(u.id, u));
 

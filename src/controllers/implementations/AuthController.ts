@@ -7,17 +7,17 @@ import { IUserService } from '../../services/interfaces/IUserService.js';
 import { AuthRequest } from '../../middleware/auth.js';
 import { User } from '../../types/index.js';
 import { HTTP_STATUS, RESPONSE_MESSAGES } from '../../utils/constants.js';
-import { CustomError } from '../../utils/CustomError.js';
+// import { CustomError } from '../../utils/CustomError.js';
 
 @injectable()
 export class AuthController implements IAuthController {
 
-    constructor(@inject(TYPES.IUserService) private userService: IUserService) { }
+    constructor(@inject(TYPES.IUserService) private _userService: IUserService) { }
 
     register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { name, email, password } = req.body;
-            const user = await this.userService.register(name, email, password);
+            const user = await this._userService.register(name, email, password);
 
             this.sendTokenResponse(user, res);
         } catch (error: unknown) {
@@ -28,7 +28,7 @@ export class AuthController implements IAuthController {
     login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { email, password } = req.body;
-            const user = await this.userService.login(email, password);
+            const user = await this._userService.login(email, password);
 
             this.sendTokenResponse(user, res);
         } catch (error: unknown) {
@@ -38,7 +38,7 @@ export class AuthController implements IAuthController {
 
     me = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const user = await this.userService.getUserById(req.user!.id);
+            const user = await this._userService.getUserById(req.user!.id);
             res.status(HTTP_STATUS.OK).json({ success: true, user });
         } catch (error: unknown) {
             next(error);
@@ -57,7 +57,7 @@ export class AuthController implements IAuthController {
     profile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { name, avatarPublicId, avatarResourceType } = req.body;
-            const updatedUser = await this.userService.updateProfile(req.user!.id, name, avatarPublicId, avatarResourceType);
+            const updatedUser = await this._userService.updateProfile(req.user!.id, name, avatarPublicId, avatarResourceType);
             res.status(HTTP_STATUS.OK).json({ success: true, user: updatedUser });
         } catch (error: unknown) {
             next(error);
