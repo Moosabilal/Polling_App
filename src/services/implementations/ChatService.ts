@@ -8,17 +8,17 @@ import { CustomError } from '../../utils/CustomError.js';
 @injectable()
 export class ChatService implements IChatService {
 
-    constructor(@inject(TYPES.IChatRepository) private chatRepository: IChatRepository) { }
+    constructor(@inject(TYPES.IChatRepository) private _chatRepository: IChatRepository) { }
 
     async addMessage(userId: string, name: string, text: string, avatarPublicId?: string, filePublicId?: string, fileResourceType?: string, fileName?: string, fileType?: string): Promise<ChatMessage> {
         if (!text && !filePublicId) {
             throw new CustomError(RESPONSE_MESSAGES.MESSAGE_CANNOT_BE_EMPTY, HTTP_STATUS.BAD_REQUEST);
         }
-        return await this.chatRepository.saveMessage(userId, name, text?.trim() || '', avatarPublicId, filePublicId, fileResourceType, fileName, fileType);
+        return await this._chatRepository.saveMessage(userId, name, text?.trim() || '', avatarPublicId, filePublicId, fileResourceType, fileName, fileType);
     }
 
     async getChatHistory(): Promise<ChatMessage[]> {
-        return await this.chatRepository.getRecentMessages(50);
+        return await this._chatRepository.getRecentMessages(50);
     }
 
     async updateMessage(msgId: string, userId: string, newText: string): Promise<ChatMessage | null> {
@@ -26,7 +26,7 @@ export class ChatService implements IChatService {
             throw new CustomError(RESPONSE_MESSAGES.MESSAGE_CANNOT_BE_EMPTY, HTTP_STATUS.BAD_REQUEST);
         }
 
-        const existingMessage = await this.chatRepository.getMessageById(msgId);
+        const existingMessage = await this._chatRepository.getMessageById(msgId);
         if (!existingMessage) {
             throw new CustomError(RESPONSE_MESSAGES.MESSAGE_NOT_FOUND, HTTP_STATUS.NOT_FOUND)
         }
@@ -40,10 +40,10 @@ export class ChatService implements IChatService {
             throw new CustomError('Messages can only be edited within 15 minutes of sending.', HTTP_STATUS.FORBIDDEN);
         }
 
-        return await this.chatRepository.updateMessage(msgId, userId, newText.trim());
+        return await this._chatRepository.updateMessage(msgId, userId, newText.trim());
     }
 
     async deleteMessage(msgId: string, userId: string): Promise<boolean> {
-        return await this.chatRepository.deleteMessage(msgId, userId);
+        return await this._chatRepository.deleteMessage(msgId, userId);
     }
 }
