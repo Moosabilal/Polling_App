@@ -297,37 +297,37 @@ document.addEventListener('DOMContentLoaded', () => {
         
         resultsBtn.addEventListener('click', async () => {
             detailedResultsModal.classList.remove('hidden');
-            detailedResultsContent.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">Loading results...</div>';
+            detailedResultsContent.innerHTML = '<div style="text-align: center; color: var(--color-text-muted); padding: 20px;">Loading results...</div>';
             
             try {
                 const res = await fetch(`/api/polls/${poll.id}/results`);
                 const data = await res.json();
                 
                 if (data.success && data.results) {
-                    let html = `<h3 style="margin-bottom: 20px; color: #f8fafc;">${data.results.question}</h3>`;
+                    let html = `<h3 class="poll-results-question">${data.results.question}</h3>`;
                     
                     data.results.options.forEach(opt => {
                         html += `
-                        <div style="margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                <span style="font-weight: 600; color: #f1f5f9;">${opt.text}</span>
-                                <span style="color: #6366f1; font-weight: bold;">${opt.votes} votes</span>
+                        <div class="poll-result-card">
+                            <div class="poll-result-header">
+                                <span class="poll-result-option-text">${opt.text}</span>
+                                <span class="poll-result-votes-badge">${opt.votes} ${opt.votes === 1 ? 'vote' : 'votes'}</span>
                             </div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            <div class="poll-result-voters-list">
                         `;
                         
                         if (opt.voters && opt.voters.length > 0) {
                             opt.voters.forEach(voter => {
                                 const avatar = voter.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(voter.name)}&background=random`;
                                 html += `
-                                <div style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 20px;">
-                                    <img src="${avatar}" alt="${voter.name}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
-                                    <span style="font-size: 0.8rem; color: #cbd5e1;">${voter.name}</span>
+                                <div class="poll-result-voter-badge">
+                                    <img src="${avatar}" alt="${voter.name}" class="poll-result-voter-avatar">
+                                    <span class="poll-result-voter-name">${voter.name}</span>
                                 </div>
                                 `;
                             });
                         } else {
-                            html += `<span style="font-size: 0.85rem; color: #64748b; font-style: italic;">No votes yet.</span>`;
+                            html += `<span class="poll-result-no-votes">No votes yet.</span>`;
                         }
                         
                         html += `</div></div>`;
@@ -335,11 +335,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     detailedResultsContent.innerHTML = html;
                 } else {
-                    detailedResultsContent.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">Failed to load results.</div>';
+                    detailedResultsContent.innerHTML = '<div style="text-align: center; color: var(--color-danger); padding: 20px;">Failed to load results.</div>';
                 }
             } catch (err) {
                 console.error(err);
-                detailedResultsContent.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 20px;">An error occurred.</div>';
+                detailedResultsContent.innerHTML = '<div style="text-align: center; color: var(--color-danger); padding: 20px;">An error occurred.</div>';
             }
         });
         
