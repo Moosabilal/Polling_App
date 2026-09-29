@@ -2,6 +2,15 @@ import { Poll } from '../types/index.js';
 import { Document } from 'mongoose';
 import { IPollModel, IPollOption, IPollVoter } from '../models/Poll.js';
 
+export interface PollDTO {
+    id: string;
+    question: string;
+    creatorId: string;
+    options: { id: string; text: string; votes: number }[];
+    votedUserIds: string[];
+    userVotes: { userId: string; optionId: string }[];
+}
+
 export class PollMapper {
     static toDomain(pollDoc: Document & IPollModel): Poll {
         return {
@@ -18,6 +27,22 @@ export class PollMapper {
                 userId: v.userId ? v.userId.toString() : v.toString(),
                 optionId: v.optionId
             })) : []
+        };
+    }
+
+    /** Only send frontend-needed fields. Keeps full userVotes for UI voting state. */
+    static toDTO(poll: Poll): PollDTO {
+        return {
+            id: poll.id,
+            question: poll.question,
+            creatorId: poll.creatorId,
+            options: poll.options.map(opt => ({
+                id: opt.id,
+                text: opt.text,
+                votes: opt.votes
+            })),
+            votedUserIds: poll.votedUserIds,
+            userVotes: poll.userVotes ?? []
         };
     }
 }

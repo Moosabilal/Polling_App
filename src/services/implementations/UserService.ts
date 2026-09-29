@@ -6,6 +6,7 @@ import { User } from '../../types/index.js';
 import bcrypt from 'bcryptjs';
 import { RESPONSE_MESSAGES, HTTP_STATUS } from '../../utils/constants.js';
 import { CustomError } from '../../utils/CustomError.js';
+import { UserMapper } from '../../mappers/UserMapper.js';
 
 @injectable()
 export class UserService implements IUserService {
@@ -15,7 +16,8 @@ export class UserService implements IUserService {
         if (!name || !email || !password) throw new CustomError(RESPONSE_MESSAGES.ALL_FIELDS_REQUIRED, HTTP_STATUS.BAD_REQUEST);
         const existing = await this._userRepository.findByEmail(email);
         if (existing) throw new CustomError(RESPONSE_MESSAGES.EMAIL_ALREADY_REGISTERED, HTTP_STATUS.CONFLICT);
-        return this._userRepository.register(name, email, password);
+        const user = await this._userRepository.register(name, email, password);
+        return UserMapper.toDTO(user);
     }
 
     async login(email: string, password: string): Promise<User> {
@@ -25,19 +27,23 @@ export class UserService implements IUserService {
         const isMatch = await bcrypt.compare(password, authData.passwordHash);
         if (!isMatch) throw new CustomError(RESPONSE_MESSAGES.INVALID_CREDENTIALS, HTTP_STATUS.UNAUTHORIZED);
 
-        return authData.user;
+        return UserMapper.toDTO(authData.user);
     }
 
     async getUserById(id: string): Promise<User | null> {
-        return this._userRepository.getUserById(id);
+        const user = await this._userRepository.getUserById(id);
+        if (!user) return null;
+        return UserMapper.toDTO(user);
     }
 
     async getAllUsers(): Promise<User[]> {
-        return await this._userRepository.getAllUsers();
+        const users = await this._userRepository.getAllUsers();
+        return users.map(u => UserMapper.toDTO(u));
     }
 
     async getUsersByIds(userIds: string[]): Promise<User[]> {
-        return await this._userRepository.getUsersByIds(userIds);
+        const users = await this._userRepository.getUsersByIds(userIds);
+        return users.map(u => UserMapper.toDTO(u));
     }
 
     async removeUser(id: string): Promise<void> {
@@ -50,6 +56,6 @@ export class UserService implements IUserService {
         if (!updatedUser) {
             throw new CustomError(RESPONSE_MESSAGES.USER_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
         }
-        return updatedUser
+        return UserMapper.toDTO(updatedUser);
     }
 }
