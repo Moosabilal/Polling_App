@@ -5,6 +5,8 @@ import { IChatRepository } from '../../repositories/interfaces/IChatRepository.j
 import { ChatMessage } from '../../types/index.js';
 import { RESPONSE_MESSAGES, HTTP_STATUS } from '../../utils/constants.js';
 import { CustomError } from '../../utils/CustomError.js';
+import { ChatMapper } from '../../mappers/ChatMapper.js';
+
 @injectable()
 export class ChatService implements IChatService {
 
@@ -14,11 +16,13 @@ export class ChatService implements IChatService {
         if (!text && !filePublicId) {
             throw new CustomError(RESPONSE_MESSAGES.MESSAGE_CANNOT_BE_EMPTY, HTTP_STATUS.BAD_REQUEST);
         }
-        return await this._chatRepository.saveMessage(userId, name, text?.trim() || '', avatarPublicId, filePublicId, fileResourceType, fileName, fileType);
+        const msg = await this._chatRepository.saveMessage(userId, name, text?.trim() || '', avatarPublicId, filePublicId, fileResourceType, fileName, fileType);
+        return ChatMapper.toDTO(msg);
     }
 
     async getChatHistory(): Promise<ChatMessage[]> {
-        return await this._chatRepository.getRecentMessages(50);
+        const messages = await this._chatRepository.getRecentMessages(50);
+        return messages.map(m => ChatMapper.toDTO(m));
     }
 
     async updateMessage(msgId: string, userId: string, newText: string): Promise<ChatMessage | null> {
@@ -28,7 +32,7 @@ export class ChatService implements IChatService {
 
         const existingMessage = await this._chatRepository.getMessageById(msgId);
         if (!existingMessage) {
-            throw new CustomError(RESPONSE_MESSAGES.MESSAGE_NOT_FOUND, HTTP_STATUS.NOT_FOUND)
+            throw new CustomError(RESPONSE_MESSAGES.MESSAGE_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
         }
         if (existingMessage.userId !== userId) {
             throw new CustomError(RESPONSE_MESSAGES.NOT_AUTHORIZED, HTTP_STATUS.FORBIDDEN);
@@ -40,7 +44,9 @@ export class ChatService implements IChatService {
             throw new CustomError('Messages can only be edited within 15 minutes of sending.', HTTP_STATUS.FORBIDDEN);
         }
 
-        return await this._chatRepository.updateMessage(msgId, userId, newText.trim());
+        const updated = await this._chatRepository.updateMessage(msgId, userId, newText.trim());
+        if (!updated) return null;
+        return ChatMapper.toDTO(updated);
     }
 
     async deleteMessage(msgId: string, userId: string): Promise<boolean> {

@@ -3,12 +3,22 @@ import { Document } from 'mongoose';
 import { IChatMessage } from '../models/ChatMessage.js';
 import { v2 as cloudinary } from 'cloudinary';
 
+export interface ChatMessageDTO {
+    id: string;
+    userId: string;
+    name: string;
+    text: string;
+    avatarUrl?: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileType?: string;
+    timestamp: Date;
+}
+
 export class ChatMapper {
     static toDomain(msgDoc: Document & IChatMessage): ChatMessage {
         let fileUrl: string | undefined;
         let avatarUrl: string | undefined;
-
-        const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dpcgcvfdp';
 
         if (msgDoc.filePublicId) {
             const resourceType = msgDoc.fileResourceType || 'image';
@@ -48,6 +58,21 @@ export class ChatMapper {
             fileName: msgDoc.fileName,
             fileType: msgDoc.fileType,
             timestamp: msgDoc.createdAt
+        };
+    }
+
+    /** Strips internal storage fields (filePublicId, fileResourceType, etc.) — safe to send to the frontend */
+    static toDTO(msg: ChatMessage): ChatMessageDTO {
+        return {
+            id: msg.id,
+            userId: msg.userId,
+            name: msg.name,
+            text: msg.text,
+            avatarUrl: msg.avatarUrl,
+            fileUrl: msg.fileUrl,
+            fileName: msg.fileName,
+            fileType: msg.fileType,
+            timestamp: msg.timestamp
         };
     }
 }

@@ -7,7 +7,6 @@ export class UserMapper {
     static toDomain(userDoc: Document & IUser): User {
         let avatarUrl = '';
         if (userDoc.avatarPublicId) {
-            const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dpcgcvfdp';
             const resourceType = userDoc.avatarResourceType || 'image';
             avatarUrl = cloudinary.utils.url(userDoc.avatarPublicId, {
                 resource_type: resourceType,
@@ -26,6 +25,16 @@ export class UserMapper {
             avatarUrl,
             avatarPublicId: userDoc.avatarPublicId,
             avatarResourceType: userDoc.avatarResourceType
+        };
+    }
+
+    /** Strips internal/sensitive fields — safe to send to the frontend */
+    static toDTO(user: User): { id: string; name: string; email: string; avatarUrl?: string } {
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatarUrl: user.avatarUrl
         };
     }
 }
