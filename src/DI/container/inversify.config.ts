@@ -1,23 +1,23 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
-import { TYPES } from '../types/index.js';
+import { TYPES } from '../types/index.ts';
 
-import { IUserRepository } from '../../repositories/interfaces/IUserRepository.js';
-import { UserRepository } from '../../repositories/implementations/UserRepository.js';
-import { IPollRepository } from '../../repositories/interfaces/IPollRepository.js';
-import { PollRepository } from '../../repositories/implementations/PollRepository.js';
-import { IChatRepository } from '../../repositories/interfaces/IChatRepository.js';
-import { ChatRepository } from '../../repositories/implementations/ChatRepository.js';
+import { IUserRepository } from '../../repositories/interfaces/IUserRepository.ts';
+import { UserRepository } from '../../repositories/implementations/UserRepository.ts';
+import { IPollRepository } from '../../repositories/interfaces/IPollRepository.ts';
+import { PollRepository } from '../../repositories/implementations/PollRepository.ts';
+import { IChatRepository } from '../../repositories/interfaces/IChatRepository.ts';
+import { ChatRepository } from '../../repositories/implementations/ChatRepository.ts';
 
-import { IUserService } from '../../services/interfaces/IUserService.js';
-import { UserService } from '../../services/implementations/UserService.js';
-import { IPollService } from '../../services/interfaces/IPollService.js';
-import { PollService } from '../../services/implementations/PollService.js';
-import { IChatService } from '../../services/interfaces/IChatService.js';
-import { ChatService } from '../../services/implementations/ChatService.js';
+import { IUserService } from '../../services/interfaces/IUserService.ts';
+import { UserService } from '../../services/implementations/UserService.ts';
+import { IPollService } from '../../services/interfaces/IPollService.ts';
+import { PollService } from '../../services/implementations/PollService.ts';
+import { IChatService } from '../../services/interfaces/IChatService.ts';
+import { ChatService } from '../../services/implementations/ChatService.ts';
 
-import { AuthController } from '../../controllers/implementations/AuthController.js';
-import { PollController } from '../../controllers/implementations/PollController.js';
+import { AuthController } from '../../controllers/implementations/AuthController.ts';
+import { PollController } from '../../controllers/implementations/PollController.ts';
 
 import { Server as SocketIOServer } from 'socket.io';
 

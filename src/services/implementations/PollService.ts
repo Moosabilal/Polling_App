@@ -1,12 +1,12 @@
 import { injectable, inject } from 'inversify';
-import { TYPES } from '../../DI/types/index.js';
-import { IPollService } from '../interfaces/IPollService.js';
-import { IPollRepository } from '../../repositories/interfaces/IPollRepository.js';
-import { DetailedPollResult, Poll } from '../../types/index.js';
-import { RESPONSE_MESSAGES, HTTP_STATUS } from '../../utils/constants.js';
-import { CustomError } from '../../utils/CustomError.js';
-import { IUserService } from '../interfaces/IUserService.js';
-import { PollMapper } from '../../mappers/PollMapper.js';
+import { TYPES } from '../../DI/types/index.ts';
+import { IPollService } from '../interfaces/IPollService.ts';
+import { IPollRepository } from '../../repositories/interfaces/IPollRepository.ts';
+import { DetailedPollResult, Poll } from '../../types/index.ts';
+import { RESPONSE_MESSAGES, HTTP_STATUS } from '../../utils/constants.ts';
+import { CustomError } from '../../utils/CustomError.ts';
+import { IUserService } from '../interfaces/IUserService.ts';
+import { PollMapper } from '../../mappers/PollMapper.ts';
 import { v4 as uuidv4 } from 'uuid';
 
 @injectable()

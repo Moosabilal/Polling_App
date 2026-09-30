@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { Container } from 'inversify';
-import { TYPES } from '../DI/types/index.js';
-import { IAuthController } from '../controllers/interfaces/IAuthController.js';
-import { IPollController } from '../controllers/interfaces/IPollController.js';
-import { authMiddleware } from '../middleware/auth.js';
-import uploadRouter from './upload.js';
-import { container } from '../DI/container/inversify.config.js';
+import { TYPES } from '../DI/types/index.ts';
+import { IAuthController } from '../controllers/interfaces/IAuthController.ts';
+import { IPollController } from '../controllers/interfaces/IPollController.ts';
+import { authMiddleware } from '../middleware/auth.ts';
+import uploadRouter from './upload.ts';
+import { container } from '../DI/container/inversify.config.ts';
 import https from 'https';
 import http from 'http';
 

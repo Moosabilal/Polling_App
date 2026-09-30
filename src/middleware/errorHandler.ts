@@ -1,6 +1,6 @@
 import { type NextFunction, type Request, type Response } from "express";
-import logger from "../logger/logger.js";
-import { CustomError } from "../utils/CustomError.js";
+import logger from "../logger/logger.ts";
+import { CustomError } from "../utils/CustomError.ts";
 
 export const errorHandler = (err: Error | CustomError, req: Request, res: Response, _next: NextFunction) => {
   let statusCode = 500;

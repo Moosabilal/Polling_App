@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware } from '../middleware/auth.ts';
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

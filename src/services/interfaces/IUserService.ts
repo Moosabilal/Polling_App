@@ -1,4 +1,4 @@
-import { User } from '../../types/index.js';
+import { User } from '../../types/index.ts';
 
 export interface IUserService {
     register(name: string, email: string, password: string): Promise<User>;

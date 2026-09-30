@@ -1,4 +1,4 @@
-import { Poll, PollOption } from '../../types/index.js';
+import { Poll, PollOption } from '../../types/index.ts';
 
 export interface IPollRepository {
     findById(pollId: string): Promise<Poll | null>;

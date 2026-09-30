@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'inversify';
-import { signToken } from '../../utils/jwt.js';
-import { TYPES } from '../../DI/types/index.js';
-import { IAuthController } from '../interfaces/IAuthController.js';
-import { IUserService } from '../../services/interfaces/IUserService.js';
-import { AuthRequest } from '../../middleware/auth.js';
-import { User } from '../../types/index.js';
-import { HTTP_STATUS, RESPONSE_MESSAGES } from '../../utils/constants.js';
-// import { CustomError } from '../../utils/CustomError.js';
+import { signToken } from '../../utils/jwt.ts';
+import { TYPES } from '../../DI/types/index.ts';
+import { IAuthController } from '../interfaces/IAuthController.ts';
+import { IUserService } from '../../services/interfaces/IUserService.ts';
+import { AuthRequest } from '../../middleware/auth.ts';
+import { User } from '../../types/index.ts';
+import { HTTP_STATUS, RESPONSE_MESSAGES } from '../../utils/constants.ts';
+// import { CustomError } from '../../utils/CustomError.ts';
 
 @injectable()
 export class AuthController implements IAuthController {

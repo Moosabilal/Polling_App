@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'inversify';
-import { TYPES } from '../../DI/types/index.js';
-import { IPollController } from '../interfaces/IPollController.js';
-import { IPollService } from '../../services/interfaces/IPollService.js';
-import { IUserService } from '../../services/interfaces/IUserService.js';
+import { TYPES } from '../../DI/types/index.ts';
+import { IPollController } from '../interfaces/IPollController.ts';
+import { IPollService } from '../../services/interfaces/IPollService.ts';
+import { IUserService } from '../../services/interfaces/IUserService.ts';
 import { Server as SocketIOServer } from 'socket.io';
-import { HTTP_STATUS, RESPONSE_MESSAGES } from '../../utils/constants.js';
-import { AuthRequest } from '../../middleware/auth.js';
-import { CustomError } from '../../utils/CustomError.js';
+import { HTTP_STATUS, RESPONSE_MESSAGES } from '../../utils/constants.ts';
+import { AuthRequest } from '../../middleware/auth.ts';
+import { CustomError } from '../../utils/CustomError.ts';
 
 @injectable()
 export class PollController implements IPollController {

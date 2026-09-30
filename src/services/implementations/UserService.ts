@@ -1,12 +1,12 @@
 import { injectable, inject } from 'inversify';
-import { TYPES } from '../../DI/types/index.js';
-import { IUserService } from '../interfaces/IUserService.js';
-import { IUserRepository } from '../../repositories/interfaces/IUserRepository.js';
-import { User } from '../../types/index.js';
+import { TYPES } from '../../DI/types/index.ts';
+import { IUserService } from '../interfaces/IUserService.ts';
+import { IUserRepository } from '../../repositories/interfaces/IUserRepository.ts';
+import { User } from '../../types/index.ts';
 import bcrypt from 'bcryptjs';
-import { RESPONSE_MESSAGES, HTTP_STATUS } from '../../utils/constants.js';
-import { CustomError } from '../../utils/CustomError.js';
-import { UserMapper } from '../../mappers/UserMapper.js';
+import { RESPONSE_MESSAGES, HTTP_STATUS } from '../../utils/constants.ts';
+import { CustomError } from '../../utils/CustomError.ts';
+import { UserMapper } from '../../mappers/UserMapper.ts';
 
 @injectable()
 export class UserService implements IUserService {
