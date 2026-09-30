@@ -1,11 +1,11 @@
 import { injectable, inject } from 'inversify';
-import { TYPES } from '../../DI/types/index.js';
-import { IChatService } from '../interfaces/IChatService.js';
-import { IChatRepository } from '../../repositories/interfaces/IChatRepository.js';
-import { ChatMessage } from '../../types/index.js';
-import { RESPONSE_MESSAGES, HTTP_STATUS } from '../../utils/constants.js';
-import { CustomError } from '../../utils/CustomError.js';
-import { ChatMapper } from '../../mappers/ChatMapper.js';
+import { TYPES } from '../../DI/types/index.ts';
+import { IChatService } from '../interfaces/IChatService.ts';
+import { IChatRepository } from '../../repositories/interfaces/IChatRepository.ts';
+import { ChatMessage } from '../../types/index.ts';
+import { RESPONSE_MESSAGES, HTTP_STATUS } from '../../utils/constants.ts';
+import { CustomError } from '../../utils/CustomError.ts';
+import { ChatMapper } from '../../mappers/ChatMapper.ts';
 
 @injectable()
 export class ChatService implements IChatService {

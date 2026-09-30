@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwt.js';
-import { CustomError } from '../utils/CustomError.js';
-import { HTTP_STATUS } from '../utils/constants.js';
-import { RESPONSE_MESSAGES } from '../utils/constants.js';
+import { verifyToken } from '../utils/jwt.ts';
+import { CustomError } from '../utils/CustomError.ts';
+import { HTTP_STATUS } from '../utils/constants.ts';
+import { RESPONSE_MESSAGES } from '../utils/constants.ts';
 
 export interface AuthRequest extends Request {
     user?: {

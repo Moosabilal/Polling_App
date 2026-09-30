@@ -1,11 +1,11 @@
 import { injectable } from 'inversify';
-import { IPollRepository } from '../interfaces/IPollRepository.js';
-import { DetailedPollResult, Poll } from '../../types/index.js';
-import { IPollOption, IPollVoter, PollModel } from '../../models/Poll.js';
+import { IPollRepository } from '../interfaces/IPollRepository.ts';
+import { DetailedPollResult, Poll } from '../../types/index.ts';
+import { IPollOption, IPollVoter, PollModel } from '../../models/Poll.ts';
 import { v4 as uuidv4 } from 'uuid';
-import { PollMapper } from '../../mappers/PollMapper.js';
-import { UserModel } from '../../models/User.js';
-import { UserMapper } from '../../mappers/UserMapper.js';
+import { PollMapper } from '../../mappers/PollMapper.ts';
+import { UserModel } from '../../models/User.ts';
+import { UserMapper } from '../../mappers/UserMapper.ts';
 
 @injectable()
 export class PollRepository implements IPollRepository {

@@ -1,6 +1,6 @@
-import { ChatMessage } from '../types/index.js';
+import { ChatMessage } from '../types/index.ts';
 import { Document } from 'mongoose';
-import { IChatMessage } from '../models/ChatMessage.js';
+import { IChatMessage } from '../models/ChatMessage.ts';
 import { v2 as cloudinary } from 'cloudinary';
 
 export interface ChatMessageDTO {

@@ -1,4 +1,4 @@
-import { ChatMessage } from '../../types/index.js';
+import { ChatMessage } from '../../types/index.ts';
 
 export interface IChatService {
     addMessage(userId: string, name: string, text: string, avatarPublicId?: string, filePublicId?: string, fileResourceType?: string, fileName?: string, fileType?: string): Promise<ChatMessage>;

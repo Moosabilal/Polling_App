@@ -1,4 +1,4 @@
-import { DetailedPollResult, Poll } from '../../types/index.js';
+import { DetailedPollResult, Poll } from '../../types/index.ts';
 
 export interface IPollService {
     getPollsPaginated(page: number, limit: number): Promise<{ polls: Poll[], totalCount: number }>;

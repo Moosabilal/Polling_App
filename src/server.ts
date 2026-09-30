@@ -10,13 +10,13 @@ import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
-import { Database } from './database/mongoose.js';
+import { Database } from './database/mongoose.ts';
 
-import { SocketHandler } from './socket/SocketHandler.js';
-import { TYPES } from './DI/types/index.js';
-import { container } from './DI/container/inversify.config.js';
-import setupApiRoutes from './routes/api.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import { SocketHandler } from './socket/SocketHandler.ts';
+import { TYPES } from './DI/types/index.ts';
+import { container } from './DI/container/inversify.config.ts';
+import setupApiRoutes from './routes/api.ts';
+import { errorHandler } from './middleware/errorHandler.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -1,6 +1,6 @@
-import { User } from '../types/index.js';
+import { User } from '../types/index.ts';
 import { Document } from 'mongoose';
-import { IUser } from '../models/User.js';
+import { IUser } from '../models/User.ts';
 import { v2 as cloudinary } from 'cloudinary';
 
 export class UserMapper {

@@ -1,6 +1,6 @@
-import { Poll } from '../types/index.js';
+import { Poll } from '../types/index.ts';
 import { Document } from 'mongoose';
-import { IPollModel, IPollOption, IPollVoter } from '../models/Poll.js';
+import { IPollModel, IPollOption, IPollVoter } from '../models/Poll.ts';
 
 export interface PollDTO {
     id: string;
